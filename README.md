@@ -25,8 +25,7 @@
       
       val user1 = User("first", 1)
       val user2 = user.copy(name = "second")
-      ``` 
-      
+      ```
 <br></br>
 - 변수의 스코프를 최소화하라
     + 프로그램 추적/관리에 용이함. 많은 요소가 생겨나면 코드를 분석하고 수정할 때
@@ -83,10 +82,27 @@
     
       print(primes.take(10).toList())
       ```
-
 <br></br>
 - 최대한 플랫폼 타입을 사용하지 마라
-    +
+    + nullable 여부를 알 수 없는 타입 -> 어노테이션 활용(@NotNull, @Nullable)
+    + NPE를 발생할 수 있는 요소 중 하나
+<br></br>
+- inferred 타입으로 리턴하지 마라
+    + 추론타입은 피연산자에 맞게 설정 됨
+    + 인터페이스에 fun produce(): Car -> fun produce() = default_car 로 바꾸면
+    Car의 다형성을 이용하여 여러 자동차를 생성하는 것에서 default_car 타입으로 제한
+<br></br>
+- 예외를 활용해 코드에 제한을 걸어라
+    + require 를 통해 argument 제한
+    + check 를 통해 상태와 관련된 동작 제한
+    + Elvis 연산자 활용
+    ```kotlin
+      val email = Person.email ?: return
+      val age = Person.age ?: run { 
+        log("age null") 
+        return
+      }
+    ```
 
 ### 1-2. 가독성
 가독성이란?
