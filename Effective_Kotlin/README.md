@@ -103,6 +103,44 @@
         return
       }
     ```
+<br></br>
+- 사용자 정의 오류보다는 표준 오류를 사용
+    + 재정의 한 오류보다는 표준 오류가 많이 알려져있기에 개발자가 이해하기 쉬움
+<br></br>
+- 결과 부족이 생길떄 null & Failure 사용
+    + try-catch 보다 명확하고 오류를 놓칠확률이 줄어듬
+    + get() 보다는 getOrNull() 을 통해 리턴을 예측하여 처리할 수 있게
+    ```kotlin
+    sealed class Result<out T>
+    class Success<out T>(val result: T): Result<T>()
+    class Failure(val throwable: Throwable): Result<Nothing>()
+  
+    val person = userText.readObjectOrNull<Person>()
+    val age = when (person) {
+        is Success -> person.age
+        is Failure -> -1  
+    }
+    ```
+<br></br>
+- 적절하게 null 을 사용하라
+    + !!의 사용을 줄여라 -> npe 발생할 수 있음
+    + lateinit(초기 호출이 명확할 때) 또는 Delegated.notNull 사
+    ```kotlin
+
+    private var id: Int by Delegates.notNull<Int>()
+    ```
+<br></br>
+- use를 사용하여 리소스를 닫아라
+    + 반드시 닫아야 하는 리소스들 사용할 때 try-catch 보다는 use -> try-catch 
+      close() 추후 가비지 컬렉터가 다 수거해야 가므로 리소스 낭비
+    ```kotlin
+    BufferReader(FileReader(path)).use { reader -> 
+        return reader.lineSequence().subMy { it.lengh }
+    }
+    ```
+<br></br>
+- 단위 테스트를 만들어라
+    + 비즈니스 로직, 복잡, 수정, 문제가 빈번한 곳
 
 ### 1-2. 가독성
 가독성이란?
