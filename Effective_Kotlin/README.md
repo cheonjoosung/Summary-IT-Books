@@ -143,8 +143,39 @@
     + 비즈니스 로직, 복잡, 수정, 문제가 빈번한 곳
 
 ### 1-2. 가독성
-가독성이란?
+- 가독성을 목표로 삼아라
+    + if 를 활용한 null check 인간이 인지하는 속도를 느리게 함
+    ```kotlin
+      if (person != null && person.isAdult) {
+        // code
+      } else {
+        // error
+      }
+      //person 이 null 일때 에러인지, 성인이 아닐때 에러인지에 대한 이해가 더 필요
+    
+      person?.takeIf { it.isAdult }
+      ?.let {
+          //code
+      }
+      ?.run {
+          //error 엘비스연산자 활
+      }
+    ```
+<br></br>
+- 연산자 오버로드를 할 때는 의미에 맞게 사용
+    + 함수에 맞는 이름을 사용 계(예외적으로 도메인 특화 언어는 가능)
 
+<br></br>
+- Unit? 을 리턴하지 말라
+    + if (!isSuccess(key)) return 와 success(key) ?: return 을 
+    오해를 하기 쉽고 눈에 잘 들어오지 않는다.
+
+<br></br>
+- 변수 타입이 명확하지 않는 경우 확실하게 지정
+    + 코틀린은 수준 높은 타입 추론 시스템을 가지고 있음
+    + 그러나, val data = getData() 보다는 val data: UserData = getData()
+    로 쓰는 것이 프로그래머가 개발자가 코드를 더 쉽게 파악할 수 있음
+      
 <br></br>
 ## 2. 코드설계
 ### 2-1. 재사용성
