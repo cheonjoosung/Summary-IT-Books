@@ -175,6 +175,66 @@
     + 코틀린은 수준 높은 타입 추론 시스템을 가지고 있음
     + 그러나, val data = getData() 보다는 val data: UserData = getData()
     로 쓰는 것이 프로그래머가 개발자가 코드를 더 쉽게 파악할 수 있음
+
+<br></br>
+- 리시버를 명시적으로 참조하
+    + let, run, apply, also 등을 사용하면 return 으로 this, it 등의 확장 리시버를 받는다
+    + 중첩으로 된 구조에서 명시적인 참조를 안하면 의도치 않게 다른 값을 참조하는 실수를 범할 수 있다.
+    + DslMarker annotation 사용 (DSL 사용 )
+
+<br></br>
+- 프로퍼티는 동작이 아니라 상태를 표시
+    + 자바의 필드와 코틀린의 프로퍼티는 엄연히 다름
+    ```kotlin
+      String name = null
+    
+      var name:String? = null
+        get() = field?.toUpperCase()
+        set(value) {
+            if (!value.isNullOrBlank()) field = value
+        }
+    ```
+    + 코틀린의 프로퍼티는 캡슐화 되어 있음
+    + 확장 프로퍼티 (안드로이드) - preferences, inflater 만으로 접근이 가능
+    ```kotlin
+      val Context.preferences:SharedPreferences
+            get() = PreferenceManager.getDefaultShagedPreferences(this)
+      val Context.inflater: LayoutInfalte
+            get() = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflator 
+    ```
+    
+
+<br></br>
+- 이름있는 아규먼트 사용
+    + 디폴트 아규먼트
+    + 같은 타입의 파라미터 많은 경우
+    + 함수 타입의 파라미터가 있는 경우 
+    ```kotlin
+    //자바 스타일
+     observable.getUsers()
+            .subscribe((List<User> users) -> { // onNext
+                
+            }, (Throwable throwable) -> { // onError
+                
+            }, () -> { // onCompleted
+                
+            }) 
+  
+    //코틀린 스타일 subscribe -> subscribeBy(자바 함수를 호출할 때 이름있는 
+    // 파라미터 사용할 수 없어서 별도 코틀린 함수 만들어야 함)
+     observable.getUsers()
+            .subscribe(
+                onNext = { users: List<User> -> },
+                onError = { throwable: Throawable ->  },
+                onCompledted = { _ -> }  
+            )
+    ```
+
+<br></br>
+- 코딩 컨센션 지키기
+    + InteliJ 포매터 사용
+    + 밑줄 그어지면 변경하고 자동정렬하면 됨
+      
       
 <br></br>
 ## 2. 코드설계
