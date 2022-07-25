@@ -239,6 +239,46 @@
 <br></br>
 ## 2. 코드설계
 ### 2-1. 재사용성
+- knowledge를 반복하여 사용하지 말라
+  + "이미 있던 코드를 복사해서 붙여넣고 있다면 잘못된 것"
+  + 로직 & 공통 알고리즘
+    - 비즈니스 로직은 시간에 따라 변하지만 공통 알고리즘은 덜한 편
+    - 모든 것(디자인 표준, 가이드, 라이브러리 등)이 변하기에 ctrl c+v 
+      가 잘못된 확률이 높음
+    - 버튼을 복붙에서 그대로 사용할 때 디자인이 바뀌면 다 고쳐야 함
+      -> 즉 추상화를 통해 구현하면 됨
+  + 단일 책임 원칙
+    - 두 액터가 동일한 클래스를 수정하면 안 됨
+    - 서로 다른 곳에서 사용하는 knowledge는 독립적으로 변경될 가능이 높기에
+      서로 다른곳에 두는것이 좋음
+
+<br></br>
+- 일반적인 알고리즘을 반복해서 구현하지 말라
+  + 이미 있는 알고리즘은 구현하지 말고 그대로 써라
+    * 작성 속도도 빨라지고 함수 이름만 보고 이해가 가능함
+  ```kotlin
+    val number = 20
+  
+    val percent = when { 
+        number > 100 -> 100
+        number < 0 -> 0
+        else -> number
+    } 
+  
+    val percent = number.coereIn(0, 100)
+  ```
+  + 표준 라이브러리 
+    * forEach를 통해 값을 넣지 말고 map을 활용하여 사용 
+  ```kotlin
+    val entries = item.sources.map(::sourceToEntry)
+  
+    fun sourceToEntry(source: Source) = SourceEntry()
+        .apply {
+            id = source.id
+            // 코드
+        }
+  ```
+  
 ### 2-2. 추상화 설계
 ### 2-3. 객체 생성
 ### 2-4. 클래스 설계
