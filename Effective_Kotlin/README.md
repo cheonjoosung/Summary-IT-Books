@@ -279,6 +279,56 @@
         }
   ```
   
+<br></br>
+- 일반적인 프로퍼티 패턴은 프로퍼티 위임으로 만들어라
+  + lazy or Delegate(observable, vetoable, notnull)
+    * 다양한 패턴을 만들 수 잇음 (리소스 바인딩, 의존성 주입, 데이터 바인딩 등) -> 어노테이션 필요
+    * 코틀린에서는 type-safe 하게 만들 수 있음
+  ```kotlin
+  var observed = false
+  var max: Int by Delegates.observable(0) { property, oldValue, newValue ->
+    println("Changing max to $newValue")
+    observed = true
+  }
+
+  var token: String? by LoggingProperty(null)
+
+  private class LoggingProperty<T>(var value: T) {
+
+    operator fun getValue(
+      thisRef: Any?,
+      prop: KProperty<*>
+    ): T {
+      println("${prop.name} returned value $value")
+      return value
+    }
+  
+    operator fun setValue(
+      thisRef: Any?,
+      prop: KProperty<*>,
+      newValue: T
+    ) {
+      val name = prop.name
+      println("$name changed from $value to $newValue")
+      value = newValue
+    }
+  }
+  ```
+
+<br></br>
+- 일반적인 알고리즘을 구현할 때 제네릭을 사용하라
+  + 프로그램의 안정성이 높아짐. 개발이 편해짐
+  + 제네릭 제한
+    * 구체적인 타입의 서브타입만 사용하게 타입을 제한
+    * Any 타입을 활용하여 nullable이 아닌 타입 표시
+    ```kotlin
+    fun <T: Comparable<T>> Iterable<T>.sorted(): List { }
+    
+    inline fun <T, R: Any> Iterable<T>mapNotNull()
+    ```
+ 
+
+  
 ### 2-2. 추상화 설계
 ### 2-3. 객체 생성
 ### 2-4. 클래스 설계
