@@ -326,8 +326,49 @@
     
     inline fun <T, R: Any> Iterable<T>mapNotNull()
     ```
- 
 
+<br></br>
+- 타입 파라미터의 섀도잉을 피하라
+  + 지역 변수가 외부 스코프의 프로퍼티를 가리는 경우
+  + 클래스 타입 파라미터에서도 발생함
+  ```kotlin
+  class Forest(val name: String) {
+     fun addTree(name: String) { 
+     }
+  }
+
+  interface Tree
+  class Birch: Tree
+  class Spruce: Tree
+  
+  class Forest<T: Tree> {
+    fun <T: Tree> addTree(tree: T) //독립적으로 동작
+  }
+  
+  val forest = Forest<Birch>()
+  forest.addTree(Birch())
+  forest.addTree(Spruce())
+  ```
+
+<br></br>
+- 제너릭 타입과 variance 한정자를 활용하라
+  + out 또는 in 으로 관련성을 주고자 할 때
+  + out - 공변성(covariant) A가 B의 서브타입일때 Cup<A>가 Cup<B>의 서브타입
+  + in - 반변성(contravariant) A가 B의 서브타입일때 Cup<A>가 Cup<B>의 슈퍼타입
+  + 함수타입
+    * (Int) -> Any 는 (Int) -> Number, (Number) -> Any 등으로 다양하게 작동
+    * 파라미터 타입은 contravariant 이고 리턴타입은 covariant 
+  + variance 한정자와 안정성능
+    * 자바의 배열은 covariant 코틀린은 invariant 묵시적으로 업캐스팅을 한다.
+    ```kotlin
+    Integer [] numbers = {1, 4, 2, 1}
+    Object[] objects = numbers
+    objects[2] = "B" //자바에서 에러 아직 Integer이기에.
+    ```
+    * Response - 네트워크 응답 데이 
+    ```kotlin
+    Response<T> 인 경우 Any가 예상되면 Int, String 가
+    ```
   
 ### 2-2. 추상화 설계
 ### 2-3. 객체 생성
