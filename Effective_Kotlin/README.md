@@ -439,6 +439,51 @@
 
 <br></b>
 ### 2-3. 객체 생성
+<br></br>
+- 생성자 대신 팩토리 함수를 사용하라
+  + 생성자의 역할을 대신 해 주는 함수가 팩토리 함수
+  ```kotlin
+  class MyLinkedList<T> (
+    val hear: T,
+    val tail: MyLinkedList<T>?        
+  )
+  
+  fun <T> myLinkedListOf(vararg elements: T) :MyLinkedList<T>? {
+    if (elements.isEmpty()) return null
+    val head = elements.first()
+    val elementsTail = elements.copyOfRagne(1, elemetns.size)
+    val tail = myLinkedListOf(*elementsTail)
+    return MyLinkedList(head, tail)
+  }
+  
+  val list = myLinkedListOf(1, 2)
+  ```
+  + 생성자와 다르게 이름을 붙여서 사용 ArrayList(3) 보다는 ArrayList.withSize(3)이
+    이해하기 더 쉬워보인다.
+  + companion, 확장, 톱레벨, 가짜 생성자, 팩토리 클래스의 메소드 등이 있음
+  + 이름 가진 - Date.from, EnumSet.of, BigInteger.valueOf, StackWalker.getInstance 등
+  + 확장 팩토리 함수
+    * 재정의
+    ```kotlin
+    interface Tool { companion object {} }
+    
+    Tool.Companion.createBigTool(): BigTool { }
+    ```
+  + 톱레벨 팩토리 함수
+    * listOf, setOf, mapOf
+  + 가짜 생성자
+    * invoke 함수를 갖는...
+  + 팩토리 클래스의 메서드
+    * 
+
+<br></b>
+- 기본 생성자에 이름 있는 옵션 아규먼트를 사용하라
+  + 생성자시 그냥 입력보다는 parameter="" 로 하면 좋음
+- 빌더 패턴
+  + 자바에서는 이렇게 사용하지만... 그냥 길다.. 명확하지도 않고.. 사용하기도 어렵다, 
+  thread-safe 구현도 어려움
+
+<br></br>
 ### 2-4. 클래스 설계
 
 <br></br>
