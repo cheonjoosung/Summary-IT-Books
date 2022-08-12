@@ -543,5 +543,47 @@
 
 <br></br>
 ## 3. 효율성
+- 연산 또는 액션을 전달할 때는 인터페이스 대신 함수 타입을 사용
+  + SAM(Single Abstract Method) - 메소드가 하나만 있는 인터페이스
+  ```kotlin
+  interface OnClick {
+    fun clicked(view: View)
+  }
+  
+  var onClicked: ((Int) -> Unit)? = null
+  ```
+    * 인터페이스보다 함수타입을 사용하면 이벤트의 수정이 일어날 때 자유롭게 가능함. 하지만 인터페이스는 구현하는 모든
+  클래스를 수정해야하는 문제가 발생함.
+  + 언제 SAM 을 사용할까?
+    * 코틀린이 아닌 다른 언어세ㅓ 사용할 클래스를 설계할 
+
+<br></br>
+- 태그 클래스보다는 클래스 계층 사용
+  ```kotlin
+  fun match(value: T?) = when (matcher) {
+  
+  }
+  
+  enum class Matcher {
+    EQUAL, NOT_EQUAL, LIST_EMPTY, LIST_NOT_EMPTY
+  }
+  ```
+  + sealed 클래스를 + abstract 사용하여 구현 
+  + 태그 클래스와 상태 패턴의 차이
+
+<br></br>
+- equals 규악을 지켜라
+  + Any 에는 equals, hashCode, toString 메서드들이 잘 설정된 규약을 가지고 있음
+  + 동등성
+    * 구조적 동등성 ==, != 값
+    * 레퍼런스적 동등성 ===, !== 객체
+  + equals 가 필요한 이유
+    * 객체를 비교할 때 class 를 사용하면 equals 를 따로 구현해야함 -> data 한정자를 사용(final 임)
+  + equals 의 규약
+    * 반사적, 대칭정, 연속적, 일관적, null 관련된 동작
+  + URL equals
+    * https://en.wiki 와 https://wiki 는 사실상 같은 주소인데 인터넷의 연결여부에 따라 달라짐 ->
+    설계가 잘못되어 있음.
+
 ### 3-1. 비용 줄이기
 ### 3-2. 효율적인 컬렉션 처리
