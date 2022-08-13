@@ -585,5 +585,80 @@
     * https://en.wiki 와 https://wiki 는 사실상 같은 주소인데 인터넷의 연결여부에 따라 달라짐 ->
     설계가 잘못되어 있음.
 
+<br></br>
+- hashCode 규악을 지켜라
+  + 해시 테이블
+    * 해쉬 테이블은 각 요소에 숫자를 할당하는 해시 함수가 필요
+    * 같은 요소라면 같은 숫자 리턴
+    * 특성 - 해쉬함수는 빠르고, 충돌이 적음
+  + 가변성과 관련된 문제
+    * LinkedHashSet, LinkedHashMap 의 키는 한번 추가한 요소를 변경할 수 없음
+    -> immutable 객체를 많이 사용
+  + hashCode 규약
+    * 어떤 객체를 변경하지 않는 이상 여러번 호출해도 같은 결과 - 일관성
+    * equals 의 결과로 같다면 hashCode 결과도 같다고 나와야 함 - 개발자들이 많이 잊어먹음
+    * eqauls 를 오버라이드 하면 hashCode 도 반드시 오버라이드 해야 함
+  + hashCode 구현하기
+    * data 한정자를 쓰면 알아서 해줌
+    * 그게 아니라면 오버라이드 필요, 관례적으로 31을 쓰고 Kotlin/JVM Objects 를 사용
+    ```kotlin
+    class A {
+      val name = ""
+      val age: Int = 0
+
+      override fun hashCode(): Int {
+          return name.hashCode().let {
+              it * 31 + age.hashCode()
+          }
+      }
+    } 
+    
+    class B {
+      val name = ""
+      val age: Int = 0
+
+      override fun hashCode(): Int = Objects.hash(name, age)
+    } 
+    ```
+    * 다른 플랫폼 (코틀린 stdlib에는 이러한 함수가 따로 없음)
+    ```kotlin
+    override fun hashCode(): Int = hashCodeOf(name, age)
+    
+    inline fun hashCodeOf(vararg values: Any?) = 
+       values.fold(0) { acc, value -> 
+            (acc * 31) + value.hashCode()
+    }
+    ```
+    
+<br></br>
+- compareTo 규악을 지켜라
+  + o1.compareTo(o2)
+  + 비대칭적 동작, 연속적 동작, 코넥스적 동작
+  + compareTo 따로 정의해야 할까?
+    * 원하는 키로 정렬 시
+    ```kotlin
+    class User(val name: String, val surname: String)
+    val sorted = names.sortBy { it.surname }
+    val sorted2 = names.sortedWith(compareBy({it.surname}, {it.name}))
+    ```
+    * 비교를 자주 사용한다면 class 안에 companion object 안에 넣어서 사용
+  + compareTo 구현
+    * 리시버 = other 0, 리시비 > other 양수, 리시버 < other 음수
+
+<br></br>
+- API의 필수적이지 않는 부분을 확장 함수로 추출하라
+  + 함수 내에 멤버 메소드를 -> 외부로 꺼내어 사용
+    * 확장 함수는 다른 패키지에 있을 확률이 높음 (데이터 & 행위를 분리하도록 설계한 프로젝트)
+    * 같은 이름이 있는 메소드가 있다면 위험할 수 있음
+    * 가상이 아님, 상속을 목적으로 설계된 클래스라면 학장 함수 노노
+  
+<br></br>
+- 멤버 확장 함수의 사용을 피하라
+  + 어떤 클래스에 대한 확장 함수를 정의할 때 멤버로 추가하는 것은 좋지 않음
+    * 레퍼런스를 지원하지 않음 ex)String::isPhoneNumber
+    * 암묵접 접근을 할 때, 두 리시버 중에 혼동함
+
 ### 3-1. 비용 줄이기
+
+
 ### 3-2. 효율적인 컬렉션 처리
