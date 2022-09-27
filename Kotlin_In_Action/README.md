@@ -97,3 +97,58 @@
   * try, catch, finally
     + throws 절이 없음
   * try 를 식으로 사용
+
+<br></br>
+### 3장 함수 정의와 호출
+- 3.1 코틀린에서 컬렉션 만들기
+  * 코틀린이 자체 컬렉션을 제공하지 않는 이유는
+    + 자바 컬렉션 활용하면 상호작용이 쉬움
+    + 서로 변환할 필요가 없음
+- 3.2 함수를 호출하기 쉽게 만들기
+  * 이름 붙인 인자
+    ```kotlin
+    println(joinToString(list, separtor = ";", prefix = "(", postfix = ")"))
+    ```
+  * 디폴트 파라미터 값
+    + 자바 일부 클래스에서 오버로딩 메서드가 너무 많음
+    + 함수 인자 받을 때 없는 경우 = "" 식으로 값을 세팅할 수 있음
+  * 3.2.3 정적인 유틸리티 클래스 없애기: 최상위 함수와 프로퍼티
+- 3.3 메서드를 다른 클래스에 추가: 확장 함수와 확장 프로퍼티
+  * 확장함수
+    + 어떤 클래스의 멤버 메서드인 것처럼 호출할 수 있지만 그 클래스 밖에 선언된 함수
+  * 수식 객체 & 타입
+    ```kotlin
+    fun String.lastChar(): Char = get(length - 1)
+    // 수신객체타입은 는 String이 되고 수신객체는 넘어오는 값 
+    ```
+  * 임포트와 확장 함수
+  * 자바에서 확장 함수 호출
+  * 확장 함수로 유틸리티 함수 정의
+  * 확장 함수는 오버라이드할 수 없음
+  * 확장 프로퍼티
+- 3.4 컬렉션 처리: 가변 길이 인자, 중위함수 호출, 라이브러리 지원
+  * vararg 키워드, 중위 함수 호출 구문, 구조 분해 선언
+  * 자바 컬렉션 API 확장
+    + last() list의 확장함수
+    ```kotlin
+    public fun <T> List<T>.last(): T {
+      if (isEmpty()) throw NoSuchElementException("List is empty.")
+      return this[lastIndex]
+    }
+    ```
+  * 가변 인자 함수: 인자의 개수가 달라질 있는 함수 정의 - vararg
+  * 값의 쌍 다루기: 중위 호출과 구조 분해 선언 - 1 to "one"
+- 3.5 문자열과 정규식 다루기
+  * 문자열 나누기 - split()
+  * 정규식과 3중 따옴표로 묶은 문자열
+    ```kotlin
+    val regex = """(.+)/(.+)\.(.+)""".toRegex()
+    val matchResult = regex.matchEntire(path)
+    matchResult?.let {
+        val (dir, fileName, ext) = it.destructured
+    }
+    ```
+- 3.6 코드 다듬기: 로컬 함수와 확장
+
+<br></br>
+### 4장 클래스 객체 인터페이스
