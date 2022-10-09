@@ -152,3 +152,86 @@
 
 <br></br>
 ### 4장 클래스 객체 인터페이스
+- 4.1 클래스 계층 정의
+  * 코틀린 인터페이스
+    - : , override 변경자 키워드 사용
+    - 자바8 에서는 default 를 이용해서 구현했지만 코틀린에서는 그냥 함수 구현이 가능
+    - 코틀린은 자바 6에 맞게 호환되어있고 코틀린 1.5부터 default 메서드 생성
+  * open, final, abstract 변경자 : 기본 final
+    - 취약한 기반 클래스(fragile base class) 자신을 상속하는 방법에 대해 정확한 규칙을 제공하지 않는 경우
+    - 코틀린의 클래스는 기본적으로 final 이기에 상속을 하고 싶다면 open 변경자가 필요함
+    - 클래스 내 메소드는 final 이 기본이고 open 이 붙어야 오버라이드 가능, override 키워드 붙은 메소드도 열려있음(final 키워드로 제한 가능)
+    - abstract 가 붙은 메소드는 반드시 오버라이드 해야 함
+  * 가시성 변경자: 기본적으로 공개(public)
+    - 클래의 외부 접근을 제어
+    - public, private, protected 는 기본적으로 자바와 같음
+    - internal 같은 모듈안에서만 볼 수 있음
+  * 내부 클래스와 중첩된 클래스: 기본적으로 중첩 클래스
+    - 자바 static class A - class A, 코틀린 class A - inner class A
+  * 봉인된 클래스(sealed class):클래스 계층 정의 시 계층 확장 제한
+    - 기본적으로 open 이고 else 식 없이 사용이 가능
+    ```kotlin
+    interface Expr2
+    class Num2(val value: Int) : Expr2
+    class Sum2(val left: Expr2, val right: Expr2) : Expr2
+    
+    fun eval2(e: Expr2): Int =
+      when (e) {
+        is Num2 -> e.value
+        is Sum2 -> eval2(e.right) + eval2(e.left)
+        else -> throw IllegalArgumentException("unchecked exception")
+      }
+    
+    
+    sealed class Expr {
+      class Num(val value: Int) : Expr()
+      class Sum(val left: Expr, val right: Expr) : Expr()
+    }
+    
+    fun eval(e: Expr): Int =
+      when (e) {
+        is Expr.Num -> e.value
+        is Expr.Sum -> eval(e.right) + eval(e.left)
+      }
+    ```
+    
+- 4.2 뻔하지 않은 생성자와 프로퍼티를 갖는 클래스 선언
+  * 클래스 초기화: 주 생성자와 초기화 블록
+    - init 블록을 통해 갑ㅅ 세팅 가능 
+    - 생성자 파라미터에 val 키워드 붙으면 이에 상응하는 프로퍼티가 생성 됨
+  * 부 생성자: 상위 클래스를 다른 방식으로 초기화
+    - constructor(ctx: Context), constructor(ctx: Context, attr:AttributeSet) 부 생성자들을
+  안드로이드에서 많이 볼 수 있다. : super() 를 통해 상위 클래스 생성자 호출 가능
+    - this() 를 통해 다른 생성자에게 위임 가능
+  * 인터페이스에 선언된 프로퍼티 구현
+  * 게터 & 세터에서 뒷받침하는 필드에 접근
+    - field 라는 식별자 사용
+  * 접근자의 가기성 변경
+    - 접근자의 가시성은 프로퍼티의 가기성과 같지만 get/set 앞에 가시성 변경자를 붙여 변경 가능
+  
+- 4.3 컴파일러가 생성한 메서드: data class & class 위임
+  * 모든 클래스가 정의해야 하는 메서드
+    - toString(), equals(), hashCode()
+  * data class: 메소드 자동 생성
+    - 인스터간 비교, 해시 기반 컨터네이너, 문자열 표현을 위한 메서드 자동 생성
+    - copy() - 일부 프로퍼티를 변경하여 새로운 객체를 만들수 있음
+  * 클래스 위임: by 키워드
+    - 데코레이터 패턴 : 상속을 허용하지 않는 클래스 대신 사용할 수 있는 새로운 클래스를 만들되 기존 클래스와 같은 인터페이스를
+  데코레이터가 제공하게 만들고
+    - : MutableCollection<T> by innerSet 뮤터블콜렉션의 구현을 innerSet에게 위임, 뮤터블 콜렉션에서
+  사용하는 메소드를 직접구현
+
+- 4.4 object 키워드: 클래스 선언과 인스터스 생성
+  * 객체 선언(싱글턴), 동반객체(companion object), 무명 내부 클래스 대신 사용
+  * 객체 선언: 싱글턴 만들기
+    - class 대신 object 키워드를 사용
+    - 생성과 동시에 인스턴스가 만들어지기에 생성자 정의가 필요 없음
+  * 동반객체
+    - static 키워드는 코틀린에 없기에 패키지 수준의 최상위 함수 & 객체 선언 시 사용
+  * 동반객체를 일반 객체처럼 사용
+    - 동반 객체에 이름을 붙임
+    - 인퍼테이스를 구현하여 사용
+    - 확장함수에 사용 가능
+  * 객체 식: 무명 내부 클래스를 다른 방식으로 확장
+    - 추상 클래스 또는 인터페이스를 구현한 클래스없이 확장하여 사용 가능 (android clickListener)
+  
