@@ -234,4 +234,46 @@
     - 확장함수에 사용 가능
   * 객체 식: 무명 내부 클래스를 다른 방식으로 확장
     - 추상 클래스 또는 인터페이스를 구현한 클래스없이 확장하여 사용 가능 (android clickListener)
+
+
+<br></br>
+### 5장 람다로 프로그래밍
+- 5.1 람다 식과 멤버 참조
+  * 람다 소개: 코드 블록을 함수 인자로 넘기기
+    - android 클릭리스너를 onClick() 메소드를 구현해야할 때 불필요한 코드를 추가해야 했지만 람다식은 간편
+    ```kotlin
+    btn.setOnClickListener { /* 동작수행 */    }
+    ```
+  * 람다와 컬렉션
+    - .maxBy{ it.age } or .mayBy(Person::age)
+  * 람다 식의 문법
+    - val sum = {x: Int, y: Int -> x + y }
+  * 현재 영역에 있는 변수에 접근
+  * 멤버 참조
+    - 클래스::멤버 멤버 참조
+- 5.2 컬렉션 함수형 API
+  * 필수적인 함수: filter, map
+    - filter 이터레이션하면서 주어진 람다에 각 원소를 넘겨서 true 만 반환하는 원소만 모음 (원소를 반환하지 않음)
+    - map 함수는 람다에 컬렉션의 각 원소에 적용한 결과를 모아서 새 컬렉션을 만듬
+  * all, any, count, find: 컬렉션에 술어 적용
+    - count() 가 size 보다 효율적임 (조건을 만족하는 원소를 따로 저장하지 않기에...)
+  * groupBy: 리스트를 여러 그룹으로 이뤄진 맵으로 변경
+    - key 와 객체로 그룹핑해서 결과를 반환함
+  * flatMap & flatten: 중첩된 컬렉션 안의 원소 처리
+    - "abc", "def" -> "abcdef" 를 flatten
+- 5.3 지연 계산(lazy) 컬렉션 연산
+  * 시퀀스 연산 실행: 중간 연산과 최종 연산
+  * 시퀀스 만들기
+- 5.4 자바 함수형 인터페이스 활용
+  * SAM(Single Abstract Method) 추상 메소드가 하나인 것
+  * 자바 메서드에 람다를 인자로 전달 
+  * SAM 생성자: 람다를 함수형 인터페이스로 명시적으로 변경
+    - btn1.setOnClickListener(listener), btn2.setOnClickListener(listener) listener 를 반복사용
+- 5.5 수신 객체 지정 람다: with 와 apply
+  * with 함수
+    - 메서드를 호출하려는 수신 객체를 전달하고 내부적으로 this 를 사용해도 되고 생략도 가능
+    - 일반 함수는 일반 람다, 확장 함수는 수신 객체 지정 람다
+  * apply 함수
+    - 인스턴스를 만들고 apply에 이 값을 전달함
+    - 블럭 안에서 해당 수신 객체를 프로퍼티를 설정할 수 있음
   
