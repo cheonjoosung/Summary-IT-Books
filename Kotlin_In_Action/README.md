@@ -338,3 +338,74 @@
   의 사항을 반영해서 코드를 작성해야 함
   * 객체의 배열과 원시 타입의 배열
     - Array...
+
+
+<br></br>
+### 7장 연산자 오버로딩과 기타 관례
+- 7.1 산술 연산자 오버로딩
+  * 이항 산술 연산 오버로딩
+    - operator 키워드를 붙여서 관례 표시
+    - plus, minus, mod(1.1 부터 rem), div, times 가 함수이름
+    - 코틀린 연산자가 자동으로 교환법칙을 지원하지 않음
+  * 복합 대입 연산자 오버로딩
+    - +=, -=, *=, /= 와 같은 연산자
+    - plus, plusAssign 을 동시에 정의 no
+  * 단항 연산자 오버로딩
+    - unaryMinus, unaryMinus, ! - not, ++a or a++ - inc, --a or a-- - dec
+- 7.2 비교 연산자 오버로딩
+  * 동등성 연산자: equals
+    - 자바에서는 객체 비교를 위해 equals or compareTo 를 사용하지만 코틀린은 필요없음
+    - a == b => a?.equals(b) ?: (b == null)
+    - === 식별자 비교 연산자로 두 객체가 같은 값을 가르키는지 == 식별자는 값이 같은지
+  * 순서연산자: compareTo
+    - a >= b 연산은 a.compareTo(b) >= 0 으로 변겨오디어 계산 됨
+    - compareValuesBy(this, obj2, Class::property1, Class:property2) 순차적으로 비교
+- 7.3 컬렉션과 범위에 대해 쓸 수 있는 관례
+  * 인덱스로 원소에 접근: get & set
+    - 인덱스 연산자 [] 를 활용 함
+    - x[a, b] -> x.get(a, b) 로 치환
+  * in 관례
+    - in 은 컬렉션에 들어가있는지 검사로 contains() 와 대응한다.
+  * rangeTo 관례
+    - start..end start 이상 end 이하의 범위 start.rangeTo(end)
+  * for 루프를 위한 iterator 관례
+    - for (x in list) -> list.iterator() 를 호출
+- 7.4 구조 분해 선언과 component 함수
+  * val (a, b) = p 는 a = p.component1, b = p.component2 순차적 할당으로 구조 분해 선언을 의미한다.
+  * 구조 분해 선언과 루프
+    - map 의 엔트리에서 component1, component2 를 꺼내 key,value 대입 가능
+- 7.5 프로퍼티 접근자 로직 재활용: 위임 프로퍼티
+  * 위임 - 객체가 직접 작업을 수행하지 않고 다른 도우미 객체가 그 작업을 처리하게 맡기는 디자인 패턴
+  * 위임 프로퍼티 소개
+    - var p: Type by Delegate()
+    - 컴파일러에 의해 생성된 get/set Value 를 통해 p의 값을 설정함
+    - 프로퍼티 위임을 사용해 초기화 지연이 가능
+  * 위임 프로퍼티 사용: by lazy() 사용한 프로퍼티 초기화 지연
+    - 객체의 일부분을 초기화하지 않고 필요한 경우에 초기화하여 사용하는 패턴
+    ```kotlin
+    class Email {}
+
+    class Person(val name: String) {
+    private var _emails: List<Email>? = null
+    
+        val emails: List<Email>
+            get() {
+                if (_emails == null) {
+                    _emails = emails
+                }
+                return _emails!!
+            }
+    }
+    ```
+    - 뒷받침하는 프로퍼티 기법 객체의 인스터스를 만들때는 emails 이 없고 emails 접근할 때 초기화를 진행
+  다만 쓰레드 안전성이 떨어지고 프러포티가 많아질 수록 코드가 기하급수적으로 커진다
+    ```kotlin
+    val emails by lazy { loadEmails(this) }
+    ```
+    - lazy 함수는 기본적으로 쓰레드 안전함. 동기화에 사용할 락을 lazy 함수에 전달할 수도 있고 다중 스레드 환경에서
+  사용하지 않을 프로퍼티를 위해 lazy 함수가 동기화를 하지 못하게 막을 수 있음
+  * 위임 프로퍼티 구현
+    - 프로퍼티가 바뀔 때마다 리스너에게 변경 통지할 경우 (UI 변경)
+  * 위임 프로퍼티 컴파일 규칙
+  * 프레임워크에서 위임 프로퍼티 활용
+  
