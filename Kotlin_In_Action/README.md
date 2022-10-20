@@ -537,5 +537,124 @@
     ```
     - this 를 사용시 수신객체로 자기자신임
   * 무명함수: 기본적으로 로컬 return
-    - 
-      
+    - qwe
+
+<br></br>
+### 9장 제네릭스
+- 9.1 제네릭 타입 파라미터
+  * Map<K, V> 일 때 Map<String, Person> 을 넘겨서 타입을 인스턴스화 할 수 있음
+  * 제네릭 함수와 프로퍼티
+    - <T>를 통해 함수 타입 파라미터, 수신 객체, 반환 타입에 쓰임
+    ```kotlin
+    fun <T> List<T>.slice(indices: IntRange): List<T>
+    ```
+    - slice() 를 호출할때 타입을 명시하지 않는 경우 컴파일러가 추론함
+  * 제네릭 클래스 선언
+    - 자바처럼 클래스/인터페이스에 <>를 통해 제네릭하게 만들 수 있음
+  * 타입 파라미터 제약
+    - 클래스/함수에 사용할 수 있는 타입 인자를 제한하는 기능
+    - sum() 함수를 고려할 때 double, int 는 되지만 String 은 안되도록..
+    ```kotlin
+    fun <T: Number> List<T>.sum() : T
+    listOf(1,2,3).sum()
+    listOf(1.0, 2.0, 3.0).sum()
+    listOf("1.0")
+    ```
+    - 제약인자로 Comparable<T>도 가능
+    - where T:CharSequence, T: Appendable T에 대한 제약사항으로 두가지의 인터페이스를 구현하도록
+  * 타입 파라미터를 널이 될 수 없는 타입으로 한정
+    - T: Any 로 지정해서 null 이 발생할 수 없다는 것을 보장
+- 9.2 실행 시 제네릭스의 동작: 소거된 타입 파라미터와 실체화된 타입 파라미터
+  * JVM 제네릭스는 타입 소거를 사용하여 구현 됨
+  * 코틀린에서 함수 inline 을 통해 타입 인자가 안지워지는 "실체화 reify"
+  * 실행 시점의 제네릭: 타입 검사와 캐스트
+    - List<String> 객체를 만들고 문자열을 넣더라도 실행 시점에 그 객체를 오직 List 로만 볼 수 있음
+    - if (list is List<String>) { } 를 사용하면 컴파일 오류가 발생함 (cannot check for instance of erased type)
+    - 저장해야 하는 타입 정보가 줄어드므로 메모리 사용량이 줄어들기에 제네릭 타입 소거 나름의 장점이 존재
+    - 스타 프로젝션 (*) 을 사용해서 확인이 가능
+    - Collection<*> type 으로 받은 후에 List<Int> 타입캐스팅 시 컴파일 에러가 발생하므로 throw exception 으로 unchecked 를 해결하면 됨
+  * 실체화한 타입 파라미터를 사용한 함수 선언
+    - inline & reified 를 통해 실체화하여 사용 시
+    ```kotlin
+    fun <T> isA(value: Any) = value is T //compile Error
+    inline fun <reified T> isA(value: Any) = value is T
+    
+    public inline fun <reified R> Iterable<*>.filterIsInstance(): List<@kotlin.internal.NoInfer R> {
+        return filterIsInstanceTo(ArrayList<R>())
+    }
+    ```
+    - list 에 문자열, 숫자형이 섞여있을 때 list.filterIsInstance<String>() 을 통해 특정 타입만 가져올 수 있음
+  * 실체화한 타입 파라미터로 클래스 참조 대신
+    - val serviceImpl = ServiceLoader.load(Service::class.java)
+    - 안드로이드 코드의 startActivity() 를 편하게 쓸 수 있음
+    ```kotlin
+    inline fun <reified T: Activity> Context.startActivity(){
+        val intent = Intent(this, T::class.java)
+        startActivity(intent)
+    }
+    
+    startActivity<DetailActivity>()
+    ```
+  * 실체화한 타입 파라미터의 제약
+    - 다음과 같은 경우
+      * 타입 검새와 캐스팅(is, !is, as, as?)
+      * 리플렉션 API(::class),
+      * 코틀린 타입에 대응하는 java.lang.Class 얻기
+      * 다른 함수를 호출할 때 타입 인자로 사용
+    - 불가능한 경우
+      * 타입 파라미터의 클래스의 인스턴스 생성
+      * 타입 파라미터 클래스의 동반 객체 메서드 호출
+      * 실체화한 타입 파라미터를 요구하는 함수를 호출하면서 실체화하지 않은 타입 파라미터로 받은 타입을 타입 인자로 넘기기
+      * 클래스, 프로퍼티, 인라인 함수가 아닌 함수의 타입 파라미터를 reified 로 지정
+- 9.3 변성: 제너릭과 하위 타입
+  * 변성이 있는 이유: 인자를 함수에 넘기기
+    - Any 타입으로 받는 함수에서 원소의 수정/삭제가 나는 경우 특정 타입으로 받게 되면 실행도중 에러가 발생할 수 있음
+    - String 타입을 던졌는데 내부에서 정수형의 원소를 수정/삭제하게 된 경우 컴파일은 문제가 없지만 런타임 에러가 발생
+  * 클래스, 타입, 하위 타입
+    - Int 는 Number 의 하위 타입이지만 String 은 아님
+    - 상위 타입은 하위 타입의 반대 개념
+    - Int? 의 하위 타입은 Int 가 맞다
+    ```kotlin
+    val s: String = "abc"
+    val t: String? = s
+    
+    val s2: String? = "abc"
+    val t2: String = s2 // compile Error
+    ```
+    - Any-String 은 상위-하위 관계가 맞미나 List<Any> - List<String> 이들은 아니다
+    - 제네릭 타입을 인스턴스화 할 때 타입 인자로 서로 다른 타입이 들어가고 인스턴스 타입 사이의
+  하위 타입 관계가 성립하지 않으면 그 제네릭 타입을 "무공변"(invariant) 라고 함
+  * 공변성: 하위 타입 관계를 유지
+    - Animal-Cat 관계를 Producer<Animal>-Producer<Cat> 도 유지하기 위해서 out 키워드 사용하여
+    공변적이라고 선언
+    ```kotlin
+    interface Producer<out T> { fun produce(): T }
+    ```
+    - 타입 캐스팅이 줄어들어서 코드 장황성 및 실수를 줄임
+    - Producer<Animal> 로 파라미터를 받는 곳에 Producer<Cat> 을 전달할 수 있음
+    - in 을 쓰면 파라미터 안에 쓸수있고 out 을 쓰면 리턴타입 위치
+    ```kotlin
+    interface MutalbeList<T> : List<T>, MutableCollection<T> {
+        override fun add(element: T): boolean // T 위치가 파라미터 안(in 의 위치)에 해당하므로 공변적이지 않음
+    }
+    ```
+    - out 은 읽기 전용으로 사용
+  * 반공변성: 뒤집힌 하위 타입 관계
+    - 타입을 소비... 쓰기가 가능해짐
+    ```kotlin
+    interface Comparator<in: T> {
+        fun compare(e1: T, e2: T): Int { }
+    }
+    ```
+    - A가 B의 하위타입이면 Consumer<B>가 Consumer<A> 의 하위타입이 됨
+    ```kotlin
+    interface Function1<in: P, out: R> {
+        operator fun invoke(p: P): R // P는 in 의 위치, R은 out 의 위치
+    }
+    ```
+  * 사용 지점 변성: 타입이 언급되는 지정에서 변성 지정
+    - in/out 의 위치에 따라 타입 프로젝션이 일어남. MutableList 가 아니라 MutableList 프로젝션을 한 제약 타입
+  * 스타 프로젝션: 타입 인자 대신 * 사용
+    - 위험할 수 있음 String 으로 받은 후에 Number 연산을 하면 에러가 나기에 타입체크 필수
+    - * -> out Any? 처럼 동작함
+    
