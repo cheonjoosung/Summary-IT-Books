@@ -708,4 +708,79 @@
   * 어노테이션을 활용한 직렬화 제어
   * JSON 파싱과 객체 역직렬화
   * 최종 역직렬화 단계: callBy(), 리플렉션을 사용해 객체 만들기
+
+
+<br></br>
+### 11장 DSL 만들기
+- 11.1 API 에서 DSL 로
+  * 코틀린 DSL은 간결한 구문을 제공하는 기능과 그 구문을 확자앻서 여러 메서드 호출을 조함으로써
+  구조를 만들어 내는 기능에 의존 함
+  ```kotlin
+  fun createSimpleTable() = createHTML().
+    table {
+        tr {
+            td { +"cell" }
+        }
+    }
+  ```
+  * 영역 특화 언어라는 개념
+    - 익숙한 DSL로 SQL 과 정규식이 있음
+    - 프로그래밍 언어와 달리 선언적이며 명령적 특성을 가짐
+    - DSL 만으로 애플리케이션을 만들기는 어려움
+  * 내부 DSL
+    - SQL 문을 kotlin 에서 사용하는 메서드를 통해 만들 수가 있음 by 코틀린 익스포즈드 프레임워크
+  * DSL의 구조
+    - gradle : 람다를 통한 중첩구조 사용
+    ```gradle
+    dependencies {
+      compile("junit:junit:4.11")
+    }
+    ```
+  * 내부 DSL로 HTML 만들기
+    - 테이블 예시
+    ```kotlin
+    fun createSimpleTable() = createHTML().
+      val numbers = mapOf(1 to "one", 2 to "two")
+     
+      for ( (num, string) in numbers) {
+        
+        tr {
+          td { +"$num" }
+          td { +string }
+        }
+      }
+    ```
+
+- 11.2 구조화된 API 구축: DSL에서 수신 객체 지정 DSL 사용
+  * 수신 객체 지정 람다와 확장 함수 타입
+    - fun <T> T.apply(block: T.() -> Unit): T { block() return this }
+  * 수신 객체 지정 람다를 HTML 빌더 안에서 사용
+    - 예시
+    ```kotlin
+    open class Tag
+    class TABLE: Tag { fun tr(init: TR.() -> Unit) }
+    class TR: Tag { fun td(init: TR.() -> Unit) }
+    class TD: Tag
     
+    fun createSimpleTable() = createHTML().
+        table {
+            (this@table).tr { //this@table type 은 TABLE
+                (this@tr).td { //this@tr type 은 TR
+                    +"cell"
+                }
+            }
+        }
+    ```
+  * 코틀린 빌더: 추상화와 재사용을 가능하게 하는 도구
+    - kotlinx.html 을 사용하면 div, button, ul, li 같은 함수 사용 가능
+  * invoke 관례와 함수형 타입
+    - 람다를 함수처럼 호출하면 이 관례에 따라 invoke 메서드 호출로 변환 됨
+  * DSL의 invoke 관례: gradle 에서 의존관계 정의
+- 11.4 실전 코틀린 DSL
+  * 중위 호출 연쇄: 테스트 프레임워크의 should
+    - s should startWith("kot") s값이 kot 으로 시작하는지 체크
+  * 원시 타입에 대한 확장 함수 정의: 날짜 처리
+    - val Int.days: Period = get() Period.ofDays(this)
+  * 멤버 확장 함수: SQL 을 위한 내부 DSL
+  * 안코: 안드로이드 UI를 동적으로 생성하기
+    - AlertDialogBuilder 패턴
