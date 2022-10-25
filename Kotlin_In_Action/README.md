@@ -784,3 +784,16 @@
   * 멤버 확장 함수: SQL 을 위한 내부 DSL
   * 안코: 안드로이드 UI를 동적으로 생성하기
     - AlertDialogBuilder 패턴
+
+
+<br></br>
+### 부록
+- 에코 시스템
+  * 테스팅 https://github.com/kotlintest/kotlintest
+  * 의존관계 주입 https://github.com/kotlintest/kotlintest
+  * JSON 직렬화 잭슨-모듈-코틀린, 콧슨, 클락슨
+  * HTTP 클라이언트 retrofit 를 우선적 사용, okhttp or Feul 이 있
+  * 웹 어플리케이션 스프링, 버텍스
+  * 데이터베이스 접근 - 익스포즈드
+  * 유틸리티와 데이터 구조 - RxJava, RxKotlin, funKTionale, 커버넌트
+  * 데스크탑 프로그래밍 - 토네이도FX
