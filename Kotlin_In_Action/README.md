@@ -954,5 +954,73 @@
 <br></br>
 - D.6 코틀린 1.6
   * 1.6의 언어 변화
-    - Enum & 봉인된 클래스 ,bollean 타입의 값에 대한 when 문에서 모든 경우 처리하지 않으면 경고
+    - Enum & 봉인된 클래스 ,boolean 타입의 값에 대한 when 문에서 모든 경우 처리하지 않으면 경고
     - 일시 중단 함수 타입을 상위 클래스로 하는 클래스 선언
+
+
+<br></br>
+### 코루틴과 Async/Await
+- E.1 코루틴이란
+  * 컴퓨터 프로그램 구성 요소 중 하나로 비선점형 멀티태스킹을 수행하는 일반화한 서브루틴
+  * 일시 중단(suspend) 하고 재개(resume) 할 수 있는 여러 진입 지점(entry point)을 허용함
+  * 메서도도 서브루틴이고 호출할 때 마다 활성 레코드라는 것이 스택에 할당되면서 서브루틴 내부의 로컬 변수 등이 초기화
+  * 코루틴 : 서로 협력해서 실행을 주고 받으면서 작동하는 여러 서브루틴
+  ```kotlin
+  generator countdown(n) {
+      while (n > 0) {
+          yield n
+          n -= 1
+      }
+  }
+  
+  for i in countdown(10) {
+      println(i)
+  }
+  ```
+  * 서부루틴은 호출시 처음부터 끝까지 실행되고 다시 불러도 동일함. 반면에 코루틴은 yiled 로 실행을 양보했던 지점부터 실행을 계속할 수 있음
+- E.2 코틀린의 코루틴 지원: 일반적인 코루틴
+  * 메이븐 * gradle
+    - kotlinx-coroutines-core
+  * E.2.1 여러 가지 코루틴
+    - 코루틴을 만들어주느 코루틴 빌더
+      + kotlinx.coroutines.CoroutineScope.launch
+        * 잡(job) 을 반환하고 만들어지면 즉시 실행하고 cancel() 을 통해 중단 가능
+        * suspend 함수 내부라면 CoroutineScope 가 있겠지만 그렇지 않은 경우 GlobalScope
+        * runblocking 을 통해 종료될 때까지 현재 쓰레드를 블록 (코루틴스코프의 확장함수가 아님)
+      + kotlinx.coroutines.CoroutineScope.async
+        * async Deffered 를 반환하고 이는 Job 을 상속한 클래스
+        * Deffered 에는 await() 함수가 정의되어 있는데 코루틴이 계산하고 돌려주는 값의 타입 (Job 은 Unit)
+  * E.2.2 코루 컨텍스트와 디스패처
+    - CoroutineContext 는 실행한 여러 작업과 디스패처를 저장하는 일종의 맵 역할을 
+  * E.2.3
+    - produce: 정해진 채널로 데이터를 스트림으로 보내는 코루틴을 만듬. ReceiveChannel<> 반환
+    - actor : 정해진 채널로 메시지를 받아 처리하는 액터를 코루틴으로 만듬 SendChannel<> 채널의 send() 사용
+    - withContext : 다른 컨텍스트로 코루틴 전환
+    - withTimeout: 정해진 시간안에 실행되지 않으면 예외 발생
+    - withTimeoutOrNull: 정해진 시간안에 실행되지 않으면 null 결과로
+    - awaitAll: 모든 작업의 성공을 기다린다. 작업 중 어느 하나가 예외로 실패하면 awaitAll도 그 예외로 실패
+    - joinAll: 모든 작업이 끌날 때까지 현재 작업을 일시 중단
+
+- E.3 suspend 키워드와 코틀린의 일시 중단 함수 컴파일 방법
+  * suspend() 안세머나 yield 사용
+  * 작동원리
+    - 코루틴에 진입할 때 나갈 때 실행 중이던 상태를 저장하고 복구하는 작업 진행
+    - 현재 실행 중이던 위치 저장하고 재개될 때 해당위치 부터 실행
+    - 다음에 어떤 코루틴을 실행할지 결정
+    - 컨티뉴에이션 패싱 스타일(CPS) 변환과 상태 기계를 활용하여 코드를 생
+
+- E.4 코루틴 빌더 만들기
+  * E.4.1 제네레이터 빌더 사용법
+    - sample
+    ```kotlin
+    fun idMaker() = generate<Int, Unit> {
+      var index = 0
+      while (index < 3) yield(index++)
+    }
+    
+    fun main() {
+      val gen = idMaker()
+      println(get.next(Unit))
+      println(get.next(Unit))
+    }
+    ```
