@@ -115,65 +115,129 @@
 <br></br>
 ### 2장 코틀린 기초
 - 2.1 기본 요소: 함수와 변수
-  * Hello World
+  * 2.1.1. Hello World
     + 함수 fun 키워드 사용
-  * 함수
+    + 변수명: 변수타입을 사용
+  <br></br>
+      
+  * 2.1.2 함수 
     + 식이 본문인 함수
     ```kotlin
     fun add(a: Int, b: Int) = a + b
     fun max(a: Int, b: Int) = if (a > b) a else b
     ```
-  * 변수
-    + val 변경 불가능한 참조를 저장하는 변수
+  <br></br>
+  
+  * 2.1.3 변수
+    + val 변경 불가능한 참조를 저장하는 변수(참조가 가르키는 객체 내부 변경 가능)
     + var 변경 가능한 참조
-  * 문자열 템플릿
+  <br></br>
+      
+  * 2.1.4 문자열 템플릿
     ```kotlin
     val hello = "Hello $name"
+    println("\$x") //$x 를 출력하고 싶을 때 escape \ 사용
     ```
+  <br></br>
+  
 - 2.2 클래스와 프로퍼티
-  * 프로퍼티
-    + val 멤버변수는 get 제공, var 멤버변수는 get, set 제공
-  * 커스텀 접근자
+  * 기본 가시성은 public 이므로 생략 가능
+  * 2.2.1 프로퍼티
+    + 필드&접근자를 프로퍼티라 부름
+    + val 읽기 전용 프로퍼티로 get 제공 
+    + var 쓸수 있는 프로퍼티로 get, set 제공
+  <br></br>
+      
+  * 2.2.2 커스텀 접근자
     ```kotlin
     val isGood: Boolean
       get() {
         return message == "Good"
       }
     ```
-  * 코틀린 소스코드 구조: 디렉터리와 패키지
-- 2.3 선택 표현과 처리: enum & when
-  * enum
-    ```kotlin
-    enum class Color { RED, BLUE }
-    ```
-  * when 으로 enum 사용
-    ```kotlin
-    enum class Color { RED, BLUE }
+    <br></br>
     
+  * 2.2.3 코틀린 소스코드 구조: 디렉터리와 패키지
+    + 패키지.method 로 접근 가능
+  <br></br>
+      
+- 2.3 선택 표현과 처리: enum & when
+  * 2.3.1 enum
+    + soft Keyword 
+    ```kotlin
+    enum class Color { RED, BLUE }
+    enum class Color2 (val r:Int, val g: Int, val b: Int) {
+        RED(255, 0, 0), BLUE(255, 165, 0); //상수 선언시 , 마지막 ;
+    
+        fun rgb() = (r*256 +g) * 256 +b
+    }
+    ```
+    <br></br>
+    
+  * 2.3.2 when 으로 enum 사용
+    + if 대신 많이 쓰임
+    + java switch 와 달리 break 안씀
+    + , 연산자를 이용해 여러 값 사용도 가능
+    ```kotlin    
     fun getColor(color: Color) = 
        when (color) {  
          Color.RED -> "RED"
          Color.BLUE -> "BLUE"
+         Color.GREEN, COLOR.YELLOW -> "NONE"
        }
     ```
-  * when & 임의의 객체를 함께 사용
-  * 인자없는 when 가능
-  * 스마트 캐스트 : 타입 검사와 타입 캐스트를 조합
-  * 리팩토링: if -> when 으로 변경
+    <br></br>
+    
+  * 2.3.3 when & 임의의 객체를 함께 사용
+    + Java Switch 분기 조건(enum 상수 숫자 리터럴)에 비해 객체 사용이 가능
+  <br></br>
+      
+  * 2.3.4 인자없는 when 가능
+    + 인자 없는 경우만 각 항목은 불리언 결과를 계산하는 식이어야 함
+  <br></br>
+      
+  * 2.3.5 스마트 캐스트 : 타입 검사와 타입 캐스트를 조합
+    + is 사용 (java instanceof)
+    + is 사용 시 컴파일러가 자동으로 타입 캐스팅 수행함 -> 스마트 캐스트라 부름
+  <br></br>
+      
+  * 2.3.6 리팩토링: if -> when 으로 변경
     + when 은 해당 구문만 실행하지만 if-else는 전체를 실행할 수 잇음
-  * if - when 분기에서 블록 사용
+  <br></br>
+    
+  * 2.3.7 if - when 분기에서 블록 사용
+  <br></br>
+    
 - 2.4 대상을 이터레이션: while & for 루프
-  * while 루프
-  * 수에 대한 이터레이션 범위와 수열
-  * 맵에 대한 이터레이션
-  * in으로 컬렉션이나 범위의 원소 검사
+  * 2.4.1 while 루프
+    + java 와 동일
+  <br></br>
+      
+  * 2.4.2 수에 대한 이터레이션 범위와 수열
+    + 범위 연산자 1..10
+    + for (i in 1..100) print(i)
+    + for (i in 100 downTo 1 step 2) print(i)
+  <br></br>
+      
+  * 2.4.3 맵에 대한 이터레이션
+    + for ((key, value) in map)
+    + for ((index, element) in list.withIndex())
+  <br></br>
+  
+  * 2.4.4 in으로 컬렉션이나 범위의 원소 검사
+    + a in 1..4 a가 1에서 4사이에 있는지 
     ```kotlin
     fun isAlphabet(c: Char) = c in 'a'..'z' || c in 'A'..'Z'
     ```
+  <br></br>
+  
 - 2.5 코틀린의 예외처리
-  * try, catch, finally
+  * 2.5.1 try, catch, finally
     + throws 절이 없음
-  * try 를 식으로 사용
+  <br></br>
+      
+  * 2.5.2 try 를 식으로 사용
+  <br></br>
 
 <br></br>
 ### 3장 함수 정의와 호출
