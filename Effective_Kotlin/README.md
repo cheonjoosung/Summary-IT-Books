@@ -2,7 +2,33 @@
 
 ## 1. 좋은코드
 ### 1-1. 안정성
-- 가변성을 제한하라
+- #### Item 1. 가변성을 제한하라
+  
+  + 가변성이 생기면 프로그램 이해&디버깅&테스트이 어려워지며 코드 실행의 추론이 어려워 진다. 또한, 
+    멀티스레드 상황에서 적절한 동기화가 필요하다.
+    ```kotlin
+    var num = 0
+    for (i in 1..1000) {
+        thread {
+            Thread.sleep(10)
+            num += 1
+        }
+    }
+    
+    num = 0
+    val lock = Any()
+    for (i in 1..1000) {
+        thread {
+            Thread.sleep(10)
+            synchronized(lock) {
+                num += 1
+            }
+        }
+    }
+    ```
+  + synchronized 을 통한 동기화가 필요하고 가변이 되는 곳마다 동기화 처리가 필요해지므로 프로그램 난이도가 올라간다.
+  <br></br>
+  + **코틀린에서 가변성 제한하기**
     + val 읽기전용 property 사용
       * get() 만 제공함
       * 재할당이 불가능한 것(읽기전용)의 개념과 값이 변할 수 있다는 것(가변성)은 다른 의미
@@ -20,14 +46,32 @@
       val mutableList = list.toMutableList()
       ```
     + data class copy
+      * immutable 객체 사용 이유
+        - 한 번 정의된 상태가 유지
+        - immutable 객체 공유 시 충돌이 발생하지 않음 병렬 처리 가능
+        - immutable 객체에 대한 참조가 변경되지 않으므로 쉽게 캐시 가능
+        - immutable 객체는 방어적 복사본을 만들 필요가 없음
+        - mutable or immutable 객체로 만들 때 활용하기 좋음  
       ```kotlin
       data class Person(val name: String, val age: Int)
       
       val user1 = User("first", 1)
       val user2 = user.copy(name = "second")
       ```
-<br></br>
-- 변수의 스코프를 최소화하라
+  <br></br>
+
+    + 다른 종류의 변경 가능 지점
+      ```kotlin
+      val list = mutalbleListOf()
+      var list2 = listOf()
+      ```
+      * list & list2 의 차이점은 변경가능한 것이 내부냐 외부냐에 있다 -> 멀티쓰레드 상황에서의 처리가 필요
+    + 변경 가능 지점 노출하지 말기
+      * class 내 copy를 사용하여 방어적 복제를 전달하여 돌발적인 수정을 막는다
+      * 클래스 내 컬렉션 객체를 읽기 전용으로 만들어 가변성을 제한
+    <br></br>
+
+- #### Item 2 변수의 스코프를 최소화하라
     + 프로그램 추적/관리에 용이함. 많은 요소가 생겨나면 코드를 분석하고 수정할 때
     변경부분이 많아지고 이는 프로그램을 이해하기 어려워질 수 있음
       ```kotlin
