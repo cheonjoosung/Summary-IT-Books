@@ -137,10 +137,37 @@
     ```
 <br></br>
 
-- 최대한 플랫폼 타입을 사용하지 마라
-    + nullable 여부를 알 수 없는 타입 -> 어노테이션 활용(@NotNull, @Nullable)
-    + NPE를 발생할 수 있는 요소 중 하나
-<br></br>
+- #### Item 3 최대한 플랫폼 타입을 사용하지 마라
+  + nullable 여부를 알 수 없는 타입 -> 어노테이션 활용(@NotNull, @Nullable)
+  + NPE를 발생할 수 있는 요소 중 하나
+  ```kotlin
+  //java 에서는 null 이 올 수 있기에 annotation 을 사용해서 코틀린에서 nullable 확인 가능
+  public class JavaTest {
+    public String giveName() {
+        return null;
+    }
+  }
+  ```
+  + !! 키워드를 사용해서 이 메소드가 전혀 null이 아니다라는 것을 사용가능하긴하다
+  ```kotlin
+  //List 및 User 의 nullable 체크가 필요하다
+  public class UserRepo {
+    public List<User> getUser() { ... }
+  
+    public @NotNull List<User> getUserNotNull() { ... }
+  }
+  
+  val Users: List<User> = UserRepo.getUser()!!.filterNotNull()
+  val Users2: List<User> = UserRepo.getUserNotNull()
+  ```
+  + 자바에서 넘어온 값들을 사용할 때 null 여부 체크를 무조건 해줘야 한다
+  + 자바에서 넘어온 타입을 '플랫폼 타입'이라고 부른다
+  + 안드로이드가 java -> kotlin 으로 넘어오면서 혼용할 때 이런 문제들이 자주 발생한다
+    * 해결책으로 java 의 annotation 을 추가
+    * java class -> kotlin class 로 변환
+  * 아무런 의식없이 쓰게되면 nullable 값을 notNullable 로 받아들여서 디버깅에 많은 문제를 야기할 수 있음
+  <br></br>
+ 
 - inferred 타입으로 리턴하지 마라
     + 추론타입은 피연산자에 맞게 설정 됨
     + 인터페이스에 fun produce(): Car -> fun produce() = default_car 로 바꾸면
