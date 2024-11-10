@@ -267,31 +267,110 @@
 - 3.3 메서드를 다른 클래스에 추가: 확장 함수와 확장 프로퍼티
   * 확장함수
     + 어떤 클래스의 멤버 메서드인 것처럼 호출할 수 있지만 그 클래스 밖에 선언된 함수
-  * 수식 객체 & 타입
+    + 기존 API가 수정될 때 재작성없이 이 기능을 활용하여 확장 기능 제공이 가능
     ```kotlin
-    fun String.lastChar(): Char = get(length - 1)
-    // 수신객체타입은 는 String이 되고 수신객체는 넘어오는 값 
+    fun String.lastChar(): Char = get(length - 1) 
     ```
-  * 임포트와 확장 함수
-  * 자바에서 확장 함수 호출
-  * 확장 함수로 유틸리티 함수 정의
-  * 확장 함수는 오버라이드할 수 없음
-  * 확장 프로퍼티
+    + 클래스 이름을 '수신 객체 타입' 이라 부르고 호출되는 대상이 되는 값(객쳬 인스턴스) '수신 객체'
+    + 수신 객체 멤버에 this 없이 접근 가능
+    + private or protected 멤버는 접근 불가
+  <br></br>
+      
+  * 3.3.1 임포트와 확장 함수
+    + 선언된 패키지의 함수를 선언해야 사용 가능
+    + as 를 사용하여 별칭으로 사용 가능
+    + 기존 함수와의 충돌을 회피해야하기에 짧은 이름 또는 바꿔서 사용해야 함
+    <br></br>
+      
+  * 3.3.2 자바에서 확장 함수 호출
+    + 수신 객체를 첫 번쨰로 인자로 받는 정적 메서드
+    + 확장 함수를 호출해도 다른 어댑터 객체나 실행 시점 부가 비용이 들지 않는다
+    <br></br>
+      
+  * 3.3.3 확장 함수로 유틸리티 함수 정의
+    <br></br>
+    
+  * 3.3.4 확장 함수는 오버라이드할 수 없음
+    + 확장 함수는 오버라이드 할 수 없다.
+    ```kotlin
+    open class View {
+        open fun click() = println("View Clicked")
+    }
+    class Button : View {
+        override fun click() = println("Button Clicked")
+    }
+    val view: View = Button()
+    view.click() //-> Button Clicked 호출 
+    ```
+    + 안드로이드의 경우 view 가르키는 객체인 Button 의 clicked 를 호출함
+    ```kotlin
+    fun View.showOff() = println("I am View")
+    fun Button.showOff() = println("I am Button")
+    val view: View = Button()
+    view.showOff() // -> I am View
+    ```
+    + 확장 함수는 정적 메서드기에 컴파일 시 View 타입을 전달하기에 View의 showOff 가 호출 됨
+    + 확장 함수의 이름과 멤버 변수의 이름이 같을 경우 멤버 변수의 우선 순위가 높아서 호출이 됨
+    <br></br>
+      
+  * 3.3.5 확장 프로퍼티
+    ```kotlin
+    val String.lastChar: Char
+      get() = get(length - 1)
+      set(value: Char) {
+         this.setCharAt(lenght - 1, value)
+      }
+    ```
+    + property 에 확장
+  <br></br>
+      
 - 3.4 컬렉션 처리: 가변 길이 인자, 중위함수 호출, 라이브러리 지원
-  * vararg 키워드, 중위 함수 호출 구문, 구조 분해 선언
-  * 자바 컬렉션 API 확장
-    + last() list의 확장함수
+  * vararg 키워드 사용 시 인자 개수가 달라지는 함수 정의 가능
+  * 중위(infix) 함수 호출 구문을 사용하면 인자가 하나뿐인 메서드를 간편하게 호출 가능
+  * 구조 분해 선언(destructuring declaration) 사용하면 복합적인 값을 분해해서 여러 변수에 나눠 담을 수 있음
+  <br></br>
+    
+  * 3.4.1 자바 컬렉션 API 확장
+    + last() or maxOrNull() 도 확장함수
     ```kotlin
     public fun <T> List<T>.last(): T {
       if (isEmpty()) throw NoSuchElementException("List is empty.")
       return this[lastIndex]
     }
+    
+    public fun <T : Comparable<T>> Iterable<T>.maxOrNull(): T? {
+      val iterator = iterator()
+      if (!iterator.hasNext()) return null
+      var max = iterator.next()
+      while (iterator.hasNext()) {
+          val e = iterator.next()
+          if (max < e) max = e
+      }
+      return max
+    }
     ```
-  * 가변 인자 함수: 인자의 개수가 달라질 있는 함수 정의 - vararg
-  * 값의 쌍 다루기: 중위 호출과 구조 분해 선언 - 1 to "one"
+  <br></br>
+  
+  * 3.4.2 가변 인자 함수: 인자의 개수가 달라질 있는 함수 정의 - vararg
+    + listOf() 의 경우 요소 값이 가변적이므로 vararg 필요
+    ```kotlin
+    public fun <T> listOf(vararg elements: T): List<T> = if (elements.size > 0) elements.asList() else emptyList()
+    ```
+    <br></br>
+    
+  * 3.4.3 값의 쌍 다루기: 중위 호출과 구조 분해 선언
+    ```kotlin
+    val map = mapOf(1 to "one", 2 to "two") to 메서드 사용
+    val (number, name) = 1 to "one" // 구조 분해 선언 (Pair)
+    ```
+    <br></br>
+  
 - 3.5 문자열과 정규식 다루기
-  * 문자열 나누기 - split()
-  * 정규식과 3중 따옴표로 묶은 문자열
+  * 3.5.1 문자열 나누기 - split()
+    + java 에서는 . 이 불가능하지만 코틀린은 가능
+    <br></br>
+    
+  * 3.5.2 정규식과 3중 따옴표로 묶은 문자열
     ```kotlin
     val regex = """(.+)/(.+)\.(.+)""".toRegex()
     val matchResult = regex.matchEntire(path)
@@ -299,7 +378,10 @@
         val (dir, fileName, ext) = it.destructured
     }
     ```
+    <br></br>
+  
 - 3.6 코드 다듬기: 로컬 함수와 확장
+    
 
 <br></br>
 ### 4장 클래스 객체 인터페이스
