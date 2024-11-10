@@ -381,28 +381,76 @@
     <br></br>
   
 - 3.6 코드 다듬기: 로컬 함수와 확장
-    
-
 <br></br>
+  
+
 ### 4장 클래스 객체 인터페이스
+- 개요
+  * 코틀린은 기본적으로 public 이며 final 이다
+  * data class 로 선언 시 유용한 메소드 들을 자동으로 생성해줌
+  <br></br>
+    
 - 4.1 클래스 계층 정의
-  * 코틀린 인터페이스
-    - : , override 변경자 키워드 사용
-    - 자바8 에서는 default 를 이용해서 구현했지만 코틀린에서는 그냥 함수 구현이 가능
-    - 코틀린은 자바 6에 맞게 호환되어있고 코틀린 1.5부터 default 메서드 생성
-  * open, final, abstract 변경자 : 기본 final
-    - 취약한 기반 클래스(fragile base class) 자신을 상속하는 방법에 대해 정확한 규칙을 제공하지 않는 경우
-    - 코틀린의 클래스는 기본적으로 final 이기에 상속을 하고 싶다면 open 변경자가 필요함
-    - 클래스 내 메소드는 final 이 기본이고 open 이 붙어야 오버라이드 가능, override 키워드 붙은 메소드도 열려있음(final 키워드로 제한 가능)
-    - abstract 가 붙은 메소드는 반드시 오버라이드 해야 함
-  * 가시성 변경자: 기본적으로 공개(public)
-    - 클래의 외부 접근을 제어
-    - public, private, protected 는 기본적으로 자바와 같음
-    - internal 같은 모듈안에서만 볼 수 있음
-  * 내부 클래스와 중첩된 클래스: 기본적으로 중첩 클래스
-    - 자바 static class A - class A, 코틀린 class A - inner class A
-  * 봉인된 클래스(sealed class):클래스 계층 정의 시 계층 확장 제한
-    - 기본적으로 open 이고 else 식 없이 사용이 가능
+  * 4.1.1 코틀린 인터페이스
+    ```kotlin
+    interface Clickable {
+        fun click()
+        fun showOff() = println("I am clickable")
+    }
+    
+    interface Focusable {
+        fun showOff() = println("I am focusable")
+    }
+    
+    class Button: Clickable, Focuable {
+        override fun click() = println("I was clicked!")
+    
+        override fun showOff(){ 
+            super<CLickable>.showOff()
+            super<Focusable>.showOff()
+        }
+    }
+    ```
+    + 자바와 달리 코틀린 에서는 키워드로 : 와 override 사용
+    + 코틀린 인터페이스에서 함수 구현이 가능하며 동일한 메소드를 override 할 때 super<Type> 을 통해 호출한 메소드를 정할 수 있음
+    + 코틀린은 자바 6에 맞게 호환되어있고 코틀린 1.5부터 default 메서드 생성
+    <br></br>
+      
+  * 4.1.2 open, final, abstract 변경자 : 기본 final
+    + 코틀린은 기본적으로 final 임
+      - 상속에 대해서 기본적으로 막혀있음
+      - 취약한 기반 클래스(fragile base class : 하위 클래스가 기반 클래스에 대해 가졌던 가정이 기반 클래스를 변) 와 같은 문제를 방지하기 위함
+    + open 키워드를 통해 상속을 가능하게 할 수 있고 override 키워드 붙은 메소드도 열려있음(final 키워드로 제한 가능)
+    + abstract 
+      - class 에 붙은 경우 추상 클래스가 되며 인스턴스를 만들 수 없다
+      - method 에 붙은 경우 항상 열려있으며 구현이 존재하지 않고 반드시 overrider 해야 함
+    + 제어 변경 자
+      - final : 오버라이드 할 수 없음
+      - open : 오버라이드 할 수 있음
+      - abstract : 반드시 오버라이드 해야 함
+      - override : 상위 클래스나 상위 인스턴스의 멤버를 오버라이드하는 중
+    <br></br>
+        
+  * 4.1.3 가시성 변경자: 기본적으로 공개(public)
+    + 클래스 외부 접근을 제어
+    + public, private, protected 는 기본적으로 자바와 같으나 default 가 public
+    + internal 같은 모듈안에서만 볼 수 있음
+    <br></br>
+      
+  * 4.1.4 내부 클래스와 중첩된 클래스: 기본적으로 중첩 클래스
+    ```kotlin
+    class Button : View {
+        override fun getCurrentState(): State = ButtonState()
+        class ButtonState: State { /* ... */ }
+    }
+    ```
+    + 클래스 B 안에 정의된 클래스 A
+      - 중첩클래스(바깥쪽 클래스에 대한 참조를 저장하지 않음) java static class, kotlin class A 
+      - 내부 클래스(바깥쪽 클래스에 대한 참조를 저장함) java class A, kotlin inner class A
+    <br></br>
+      
+  * 4.1.5 봉인된 클래스(sealed class):클래스 계층 정의 시 계층 확장 제한
+    + 기본적으로 open 이고 else 식 없이 사용이 가능
     ```kotlin
     interface Expr2
     class Num2(val value: Int) : Expr2
@@ -427,20 +475,52 @@
         is Expr.Sum -> eval(e.right) + eval(e.left)
       }
     ```
-    
+    + selaed 를 쓰는 경우 else 를 빼먹어도 문제가 발생하지 않음 (when 에서 모든 하위 클래스를 검사하기에..)
+    <br></br>
+  
 - 4.2 뻔하지 않은 생성자와 프로퍼티를 갖는 클래스 선언
-  * 클래스 초기화: 주 생성자와 초기화 블록
-    - init 블록을 통해 갑ㅅ 세팅 가능 
-    - 생성자 파라미터에 val 키워드 붙으면 이에 상응하는 프로퍼티가 생성 됨
-  * 부 생성자: 상위 클래스를 다른 방식으로 초기화
-    - constructor(ctx: Context), constructor(ctx: Context, attr:AttributeSet) 부 생성자들을
-  안드로이드에서 많이 볼 수 있다. : super() 를 통해 상위 클래스 생성자 호출 가능
-    - this() 를 통해 다른 생성자에게 위임 가능
-  * 인터페이스에 선언된 프로퍼티 구현
-  * 게터 & 세터에서 뒷받침하는 필드에 접근
-    - field 라는 식별자 사용
-  * 접근자의 가기성 변경
-    - 접근자의 가시성은 프로퍼티의 가기성과 같지만 get/set 앞에 가시성 변경자를 붙여 변경 가능
+  * 4.2.1 클래스 초기화: 주 생성자와 초기화 블록
+    ```kotlin
+    class User(_nickname: String) {
+        val nickname = _nickname
+    }
+    class User2(val nickname: String) //val 은 이 파라미터에 상응하는 프로퍼티가 생성된다는 뜻
+    ```
+    + init 블록을 통해 값을 세팅 가능
+    + 클래스를 외부에서 인스턴스화하지 못하게 막고 싶다면 모든 생성자를 private 으로 만들면 됨
+    <br></br>
+      
+  * 4.2.2 부 생성자: 상위 클래스를 다른 방식으로 초기화
+    ```kotlin
+    open class View {
+        constructor(ctx: Context) { }
+        constructor(ctx: Context, attr:AttributeSet) { }
+    }
+    ```
+    + 안드로이드에서 많이 볼 수 있다. : super() 를 통해 상위 클래스 생성자 호출 가능
+    + this() 를 통해 다른 생성자에게 위임 가능
+    <br></br>
+      
+  * 4.2.3 인터페이스에 선언된 프로퍼티 구현
+    ```kotlin
+    interface User {
+        val nickname: String
+    }
+    
+    class SubscribingUser(val email:String) : User {
+        override val nickname:String
+            get() = email.substringBefore('@')
+    }
+    ```
+    <br></br>
+    
+  * 4.2.4 게터 & 세터에서 뒷받침하는 필드에 접근
+    + field 라는 특별식별자를 사용해서 기존에 사용한 프로퍼티에 접근할 수 있음
+    <br></br>
+      
+  * 4.2.5 접근자의 가시성 변경
+    + 접근자의 가시성은 프로퍼티의 가기성과 같지만 get/set 앞에 가시성 변경자를 붙여 변경 가능
+    <br></br>
   
 - 4.3 컴파일러가 생성한 메서드: data class & class 위임
   * 모든 클래스가 정의해야 하는 메서드
