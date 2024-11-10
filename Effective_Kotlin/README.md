@@ -168,11 +168,29 @@
   * 아무런 의식없이 쓰게되면 nullable 값을 notNullable 로 받아들여서 디버깅에 많은 문제를 야기할 수 있음
   <br></br>
  
-- inferred 타입으로 리턴하지 마라
-    + 추론타입은 피연산자에 맞게 설정 됨
-    + 인터페이스에 fun produce(): Car -> fun produce() = default_car 로 바꾸면
-    Car의 다형성을 이용하여 여러 자동차를 생성하는 것에서 default_car 타입으로 제한
-<br></br>
+- #### Item 4 inferred 타입으로 리턴하지 마라
+  + 추론타입은 피연산자에 맞게 설정 됨
+  ```kotlin
+  open class Animal 
+  class Zebra : Animal()
+  
+  var animal = Zebra()
+  animal = Animal() // type mismatch
+  var animal2 : Animal = Zebra()
+  animal2 = Animal() // OK
+  ```
+  + 인터페이스 Fiat16P 만 생산한다고 타입을 제외하는 순간 Car 가 아닌 Fiat126P 로 제한이 되어 문제가 발생한다(다형성)
+  ```kotlin
+  interface CarFactory {
+    fun produce(): Car
+  }
+  
+  val DEFAULT_CAR : Car = Fiat126P()
+  val DEFAULT_CAR2 = Fiat126P()
+  ```
+  + API를 만들어서 외부에 공개할 떄 명확한 리턴 타입 명시가 필요
+  <br></br>
+  
 - 예외를 활용해 코드에 제한을 걸어라
     + require 를 통해 argument 제한
     + check 를 통해 상태와 관련된 동작 제한
