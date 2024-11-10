@@ -191,18 +191,42 @@
   + API를 만들어서 외부에 공개할 떄 명확한 리턴 타입 명시가 필요
   <br></br>
   
-- 예외를 활용해 코드에 제한을 걸어라
-    + require 를 통해 argument 제한
-    + check 를 통해 상태와 관련된 동작 제한
-    + Elvis 연산자 활용
+- #### Item 5 예외를 활용해 코드에 제한을 걸어라
+  + 제한 방법
+    - require : argument 제한
+    - check : 상태와 관련된 동작 제한
+    - assert : 어떤 것이 true 인지 확인
+    - return or throw 와 함께 활용하는 Elvis 연산자 활용
     ```kotlin
-      val email = Person.email ?: return
-      val age = Person.age ?: run { 
-        log("age null") 
-        return
-      }
+    fun pop(num: Int = 1): List<T> {
+        require(num <= size) {
+            "Cannot remove more elements than current size"
+        }
+        check(isOpen) { "Cannot pop from closed stack" }
+        val ret = collection.take(num)
+        collection = collection.drop(num)
+        assert(ret.size == num)
+        return ret    
+    }
     ```
+  + 아규먼트
+    - require 키워드 사용 (조건 미 충족시 IllegalArgument Exception 발생)
+    - ex) 팩토리얼 계산시 양의 정수만, 좌표를 받을 때 비어있지 않은 좌표, 이메일일때 규격
+  + 상태
+    - check 키워드 사용 (조건 미 충족시 IllegalState Exception 발생)
+    - require 이후에 배치
+    - ex) 어떤 객체 미리 초기화 후 진행, 로그인한 경우만 처리, 객체 사용할 있는 시점에만 처리
+  + Assert 계열 함수
+    - assertXXXX() 키워드 사용
+    - 테스트에 주로 사용하고 함수가 올바르게 구현되었다면 참을 낼수 있는 코드
+    - 예외를 throw 하지 않음
+  + nullability & 스마트 캐스팅
+    - requireNotNull, checkNotNull 메소드를 통해 변수를 'unpack' 도 가능. 
+    - Null 체크를 하면 기 이후부터는 notNullable 이 됨
+    - val email : String = person.email ?: return 의 형태로 많이 사용하기도 한다
+    - val email : String = person.email ?: run { null 인 경우 하고 싶은 코드 } 의 형태로 많이 사용하기도 한다
 <br></br>
+
 - 사용자 정의 오류보다는 표준 오류를 사용
     + 재정의 한 오류보다는 표준 오류가 많이 알려져있기에 개발자가 이해하기 쉬움
 <br></br>
