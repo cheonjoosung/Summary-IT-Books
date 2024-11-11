@@ -578,18 +578,44 @@
 
 ### 5장 람다로 프로그래밍
 - 5.1 람다 식과 멤버 참조
-  * 람다 소개: 코드 블록을 함수 인자로 넘기기
-    - android 클릭리스너를 onClick() 메소드를 구현해야할 때 불필요한 코드를 추가해야 했지만 람다식은 간편
+  * 5.1.1 람다 소개: 코드 블록을 함수 인자로 넘기기
+    + 람다식으로 간편하고 이해하기 쉽게 작성 가능
     ```kotlin
+    btn.setOnClickListener(new OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            
+        }
+    })
     btn.setOnClickListener { /* 동작수행 */    }
     ```
-  * 람다와 컬렉션
-    - .maxBy{ it.age } or .mayBy(Person::age)
-  * 람다 식의 문법
-    - val sum = {x: Int, y: Int -> x + y }
-  * 현재 영역에 있는 변수에 접근
-  * 멤버 참조
-    - 클래스::멤버 멤버 참조
+    <br></br>
+    
+  * 5.1.2 람다와 컬렉션
+    + list.maxByOrNull { it.age }
+    <br></br>
+      
+  * 5.1.3 람다 식의 문법
+    ```
+    val sum = { x: Int, y: Int -> x + y }
+    println(sum(1,2))
+    
+    list.maxByOrNull { it.age } // 안쓰는 경우 it 자동 생성
+    list.maxByOrNull { p: Person -> p.age } // 명확하게 구분 또는 중첩일 때 선언 필요
+    list.maxByOrNull { p -> p.age } //type 추론 생략
+    ```
+    <br></br>
+      
+  * 5.1.4 현재 영역에 있는 변수에 접근
+    + 코틀린은 자바와 달리 람다에서 람다 밖 함수에 있는 파이널이 아닌 변수에 접근 가능하며 변경도 가능
+    + 이러한 외부 변수들을 람다가 포획한 변수라 부르고 생명주기가 끝나면 반환
+    <br></br>
+    
+  * 5.1.5 멤버 참조
+    + 클래스::멤버 멤버 참조
+    + 최상위에 선언된 함수나 프로퍼티를 참조할 수도 있음
+    <br></br>
+      
 - 5.2 컬렉션 함수형 API
   * 필수적인 함수: filter, map
     - filter 이터레이션하면서 주어진 람다에 각 원소를 넘겨서 true 만 반환하는 원소만 모음 (원소를 반환하지 않음)
