@@ -10,3 +10,7 @@
 [3. Effective Kotlin 정리](https://github.com/cheonjoosung/Summary-IT-Books/tree/master/Effective_Kotlin)
 
 [4. Kotlin In Action 정리](https://github.com/cheonjoosung/Summary-IT-Books/tree/master/Kotlin_In_Action)
+
+[5. Android Jetpack 정리](https://github.com/cheonjoosung/Summary-IT-Books/tree/master/Android_Jetpack)
+
+[6. Android Architecture 정리](https://github.com/cheonjoosung/Summary-IT-Books/tree/master/Android_Architecture)
