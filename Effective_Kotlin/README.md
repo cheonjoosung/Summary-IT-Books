@@ -301,17 +301,26 @@
     * 이럴 때 성능은 다소 떨어지지만 lateinit 대신 Delegates.notNull() 사용
     <br></br>
 
-- use를 사용하여 리소스를 닫아라
-    + 반드시 닫아야 하는 리소스들 사용할 때 try-catch 보다는 use -> try-catch 
-      close() 추후 가비지 컬렉터가 다 수거해야 가므로 리소스 낭비
+- #### Item 9 use를 사용하여 리소스를 닫아라
+  + close 메소드 사용
+    * InputStream/OutputStream, java.sql.Connection java.io.Reader, java.new.Socket & java.util.Scanner
+    * close 한 리소스는 가비지 콜렉터가 처리하는데 레퍼런스가 없어질때까지 기다리기에 느리고 유지비용이 많이 듬
+    * 반드시 닫아야 하는 리소스들 사용할 때 use(Closeable, AuthCloseable) 를 사용해라 
     ```kotlin
     BufferReader(FileReader(path)).use { reader -> 
-        return reader.lineSequence().subMy { it.lengh }
+      return reader.lineSequence().sumBy { it.lengh }
     }
     ```
-<br></br>
-- 단위 테스트를 만들어라
-    + 비즈니스 로직, 복잡, 수정, 문제가 빈번한 곳
+  <br></br>
+
+- #### Item 10 단위 테스트를 만들어라
+  + 일반적인 UseCase(Happy Case), 오류케이스, 엣지케이스 ,
+  + TDD 접근방식도 가능 
+    * 테스트가 잘 되었기에 신뢰가고 리팩토링이 어렵지 않음
+    * 레거시 코드를 수정하기가 겁남 (다른 개발자가 케이스를 파악하기 힘들므로)
+    * 테스트를 만드는데 많이 시간도 걸림
+    * 테스트를 유지하는데 아키텍처가 강제되는 경우도 발생
+  + 복잡한 부분, 계속해서 수정이 발생해서 리팩토링이 필요한 부분, 비즈니스 로직, 공용 API, 문제가 자주 발생하는 부분, 운영 버그
 
 ### 1-2. 가독성
 - 가독성을 목표로 삼아라
