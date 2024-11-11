@@ -193,10 +193,10 @@
   
 - #### Item 5 예외를 활용해 코드에 제한을 걸어라
   + 제한 방법
-    - require : argument 제한
-    - check : 상태와 관련된 동작 제한
-    - assert : 어떤 것이 true 인지 확인
-    - return or throw 와 함께 활용하는 Elvis 연산자 활용
+    * require : argument 제한
+    * check : 상태와 관련된 동작 제한
+    * assert : 어떤 것이 true 인지 확인
+    * return or throw 와 함께 활용하는 Elvis 연산자 활용
     ```kotlin
     fun pop(num: Int = 1): List<T> {
         require(num <= size) {
@@ -210,30 +210,47 @@
     }
     ```
   + 아규먼트
-    - require 키워드 사용 (조건 미 충족시 IllegalArgument Exception 발생)
-    - ex) 팩토리얼 계산시 양의 정수만, 좌표를 받을 때 비어있지 않은 좌표, 이메일일때 규격
+    * require 키워드 사용 (조건 미 충족시 IllegalArgument Exception 발생)
+    * ex) 팩토리얼 계산시 양의 정수만, 좌표를 받을 때 비어있지 않은 좌표, 이메일일때 규격
   + 상태
-    - check 키워드 사용 (조건 미 충족시 IllegalState Exception 발생)
-    - require 이후에 배치
-    - ex) 어떤 객체 미리 초기화 후 진행, 로그인한 경우만 처리, 객체 사용할 있는 시점에만 처리
+    * check 키워드 사용 (조건 미 충족시 IllegalState Exception 발생)
+    * require 이후에 배치
+    * ex) 어떤 객체 미리 초기화 후 진행, 로그인한 경우만 처리, 객체 사용할 있는 시점에만 처리
   + Assert 계열 함수
-    - assertXXXX() 키워드 사용
-    - 테스트에 주로 사용하고 함수가 올바르게 구현되었다면 참을 낼수 있는 코드
-    - 예외를 throw 하지 않음
+    * assertXXXX() 키워드 사용
+    * 테스트에 주로 사용하고 함수가 올바르게 구현되었다면 참을 낼수 있는 코드
+    * 예외를 throw 하지 않음
   + nullability & 스마트 캐스팅
-    - requireNotNull, checkNotNull 메소드를 통해 변수를 'unpack' 도 가능. 
-    - Null 체크를 하면 기 이후부터는 notNullable 이 됨
-    - val email : String = person.email ?: return 의 형태로 많이 사용하기도 한다
-    - val email : String = person.email ?: run { null 인 경우 하고 싶은 코드 } 의 형태로 많이 사용하기도 한다
+    * requireNotNull, checkNotNull 메소드를 통해 변수를 'unpack' 도 가능. 
+    * Null 체크를 하면 기 이후부터는 notNullable 이 됨
+    * val email : String = person.email ?: return 의 형태로 많이 사용하기도 한다
+    * val email : String = person.email ?: run { null 인 경우 하고 싶은 코드 } 의 형태로 많이 사용하기도 한다
 <br></br>
 
-- 사용자 정의 오류보다는 표준 오류를 사용
-    + 재정의 한 오류보다는 표준 오류가 많이 알려져있기에 개발자가 이해하기 쉬움
-<br></br>
-- 결과 부족이 생길떄 null & Failure 사용
-    + try-catch 보다 명확하고 오류를 놓칠확률이 줄어듬
-    + get() 보다는 getOrNull() 을 통해 리턴을 예측하여 처리할 수 있게
+- #### Item 6 사용자 정의 오류보다는 표준 오류를 사용
+  + 재정의 한 오류보다는 표준 오류가 많이 알려져있기에 개발자가 이해하기 쉬움
+  + CustomException 을 사용하는 경우 모르는 사람이 이해하기 어려움
+  <br></br>
+  
+- #### Item 7 결과 부족이 생길떄 null & Failure 사용
+  + 코틀린의 모든 예외는 unchecked 예외 (처리의 강제성이 없음)
+  + try-catch 사용 시 명확하고 오류를 놓칠 확률이 줄어들지만 컴파일러가 할 수 있는 최적화가 줄어듬
+  + null or Failure 사용
     ```kotlin
+    inline fun <reified T> String.readObjectOrNull(): T? {
+        if (incorrestSign) return null
+        
+        return result
+    }
+    
+    val age = when UserText.readObjectOrNull<Person>?.age ?: -1
+    
+    inline fun <reified T> String.readObject(): Result<T> {
+        if (incorrestSign) return Failure(JsonParsingException())
+    
+        return Success(result)    
+    }
+    
     sealed class Result<out T>
     class Success<out T>(val result: T): Result<T>()
     class Failure(val throwable: Throwable): Result<Nothing>()
@@ -244,15 +261,46 @@
         is Failure -> -1  
     }
     ```
-<br></br>
-- 적절하게 null 을 사용하라
-    + !!의 사용을 줄여라 -> npe 발생할 수 있음
-    + lateinit(초기 호출이 명확할 때) 또는 Delegated.notNull 사
-    ```kotlin
+    * 안전 호출(safe call) or Elvis 연산자로 널 안정성 기능 활용 가능
+    * Result 와 같은 공용체(union type)를 사용하여 when 처리도 가능
+    * try-catch 보다 명확하며 애플리케이션 흐름도 중지시키지 않고 효율적임
+  <br></br>
 
+- #### Item 8 적절하게 null 을 사용하라
+  + nullable 타입 3가지 처리 방법
+    * ?. , 스마트 캐스이 , Elvis 연산자
+    * 오류 throw
+    * 함수 또는 프로퍼티를 리팩터링 해서 nullable 타입 제거
+  + null 안전하게 처리
+    ```kotlin
+    printer?.print() //안전호출
+    if (printer != null) printer.print() // 스마트캐스팅
+    ```
+    * Collection<T>?.orEmpty() 를 통해 빈 List<T> 를 받을 수 있음
+    * 공격적 프로그래밍 : require, check, assert 미리 알려서 수정
+    * 방어적 프로그래밍 : 발생할 수 있는 많은 것들로부터 안정성을 높이기위해 이것저것 다 하는 것
+  + 오류 thorw 하기
+    * 개발자가 어떤 코드를 보고 당연히 null이 아닐것으로 착각할 수 있다면 throw 를 날려 인지시키기
+  + not-null assertion(!!)과 관련된 문제
+    * !! 현 시점에 확실하다고 해도 미래의 변경될 수도 있기에 사용을 권하지 않음
+    * lateinit(초기 호출이 명확할 때) 또는 Delegated.notNull 사용
+    ```kotlin
+    private lateinit var name: String
     private var id: Int by Delegates.notNull<Int>()
     ```
-<br></br>
+  + 의미없는 nullability 피하기
+    * null -> !! 사용을 만들고 불필요한 의미없는 코드로 예외처리 하는 안좋은 영향이 발생 함 
+    * 요소가 부족하다는 것을 나타낼때는 빈 컬렉션 사용 (List<Int>? 비추)
+  + lateinit 프로퍼티와 notNull 델리게이트
+    ```kotlin
+    private lateinit var name: String
+    private var id: Int by Delegates.notNull<Int>()
+    ```
+    * 초기화전에 값을 사용할 때 문제가 발생하지만 !!(unPack), nullable 로도 변경가능한 장점
+    * JVM Int, Long, Double, Boolean 과 같은 기본타입과 연결된 경우 lateinit 사용 불가
+    * 이럴 때 성능은 다소 떨어지지만 lateinit 대신 Delegates.notNull() 사용
+    <br></br>
+
 - use를 사용하여 리소스를 닫아라
     + 반드시 닫아야 하는 리소스들 사용할 때 try-catch 보다는 use -> try-catch 
       close() 추후 가비지 컬렉터가 다 수거해야 가므로 리소스 낭비
