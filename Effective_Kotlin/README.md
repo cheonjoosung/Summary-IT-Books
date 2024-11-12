@@ -323,25 +323,32 @@
   + 복잡한 부분, 계속해서 수정이 발생해서 리팩토링이 필요한 부분, 비즈니스 로직, 공용 API, 문제가 자주 발생하는 부분, 운영 버그
 
 ### 1-2. 가독성
-- 가독성을 목표로 삼아라
-    + if 를 활용한 null check 인간이 인지하는 속도를 느리게 함
-    ```kotlin
-      if (person != null && person.isAdult) {
-        // code
-      } else {
-        // error
-      }
-      //person 이 null 일때 에러인지, 성인이 아닐때 에러인지에 대한 이해가 더 필요
-    
-      person?.takeIf { it.isAdult }
-      ?.let {
-          //code
-      }
-      ?.run {
-          //error 엘비스연산자 활
-      }
-    ```
-<br></br>
+- #### Item 11 가독성을 목표로 삼아라
+  + 인식 부하 감소
+  ```kotlin 
+    if (person != null && person.isAdult) {
+      // code
+    } else {
+      // error
+    }
+  
+    person?.takeIf { it.isAdult }
+    ?.let {
+        //code
+    }
+    ?.run {
+        //error 엘비스연산자 활
+    }
+  ```
+    * if-else 구문이 익숙하기에 눈에 잘 들어옴 (kotlin 의 경우 takeIf, elvis 연산자가 익숙하긴하나 복잡함)
+    * 가독성은 뇌가 프로그램의 작동 방식을 이해하는 과정을 더 짧게 만드는 것
+  + 극단적이 되지 않기
+    * let, run 을 무조건 쓰지 말라는 것이 아님
+    * 연산을 아규먼트 처리 후 이동시킬 때, 데코레이터를 사용해서 객체를 랩할 때 등 필요
+  + 컨벤션
+    * 연산자는 의미에 맞게 사용, 기존에 있는 기능을 새로 만들지 마라 등
+  <br></br>
+  
 - 연산자 오버로드를 할 때는 의미에 맞게 사용
     + 함수에 맞는 이름을 사용 계(예외적으로 도메인 특화 언어는 가능)
 
