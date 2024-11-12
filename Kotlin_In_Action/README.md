@@ -617,15 +617,49 @@
     <br></br>
       
 - 5.2 컬렉션 함수형 API
-  * 필수적인 함수: filter, map
-    - filter 이터레이션하면서 주어진 람다에 각 원소를 넘겨서 true 만 반환하는 원소만 모음 (원소를 반환하지 않음)
-    - map 함수는 람다에 컬렉션의 각 원소에 적용한 결과를 모아서 새 컬렉션을 만듬
-  * all, any, count, find: 컬렉션에 술어 적용
-    - count() 가 size 보다 효율적임 (조건을 만족하는 원소를 따로 저장하지 않기에...)
-  * groupBy: 리스트를 여러 그룹으로 이뤄진 맵으로 변경
-    - key 와 객체로 그룹핑해서 결과를 반환함
-  * flatMap & flatten: 중첩된 컬렉션 안의 원소 처리
-    - "abc", "def" -> "abcdef" 를 flatten
+  * 5.2.1 필수적인 함수: filter, map
+    ```kotlin
+    val list = listOf(1,2,3,4)
+    list.filter { it % 2 == 0 }
+    list.map { it * it }
+    list.filter {it % 2 == 0}.map { it * it}
+    ```
+    + filter 
+      - Iteration 하면서 주어진 람다가 true 만 반환
+    + map
+      - 주어진 람다를 각 원소에 적용한 결과를 모아 새 컬렉션을 만듬
+    <br></br>
+    
+  * 5.2.2 all, any, count, find: 컬렉션에 술어 적용
+    ```kotlin
+    val canBeInClub27 = { p: Persion -> p.age <=27 }
+    val people = listOf(Person("A", 27), Person("B", 31))
+    people.all(canBeInClub27)
+    people.any(canBeInClub27)
+    people.count(canBeInClub27)
+    ```
+    + all : 모두 만족 하는가?
+    + any : 하나라도 만족 하는가?
+    + count() : 몇 개 인가? 
+      - filter 와 같이 쓸 때 count 가 size 보다 효율적임 (size 는 중간 컬렉션을 생성함)
+    <br></br>
+      
+  * 5.2.3 groupBy: 리스트를 여러 그룹으로 이뤄진 맵으로 변경
+    ```kotlin
+    val people = listOf(Person("A", 27), Person("B", 31), Person("C", 31))
+    val ageGroup = people.groupBy { it.age }
+    ```
+    + key(주어진 람다 위 식에서 age) 를 기반으로 그룹핑한 결과를 반환함
+    <br></br>
+    
+  * 5.2.4 flatMap & flatten: 중첩된 컬렉션 안의 원소 처리
+    ```kotlin
+    val people = listOf(Person("A", 27), Person("B", 31), Person("C", 31))
+    people.flatMap { it.name }.toSet() // people 컬렉션에 있는 이름의 집합
+    ```
+    + "abc", "def" -> "abcdef" 를 flatten
+    <br></br>
+    
 - 5.3 지연 계산(lazy) 컬렉션 연산
   * 시퀀스 연산 실행: 중간 연산과 최종 연산
   * 시퀀스 만들기
