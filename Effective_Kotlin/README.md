@@ -349,10 +349,38 @@
     * 연산자는 의미에 맞게 사용, 기존에 있는 기능을 새로 만들지 마라 등
   <br></br>
   
-- 연산자 오버로드를 할 때는 의미에 맞게 사용
-    + 함수에 맞는 이름을 사용 계(예외적으로 도메인 특화 언어는 가능)
-
-<br></br>
+- #### Item 12 연산자 오버로드를 할 때는 의미에 맞게 사용
+  + 함수에 맞는 이름을 사용(예외적으로 도메인 특화 언어는 가능)
+  ```kotlin
+  fun Int.factorial(): Int = (1..this).product()
+  fun Iterable<Int>product(): Int = fold(1) { acc, i -> acc * i }
+  
+  print(10 * 6.factorial()) // 7200
+  print(10 * 6!) // ? 
+  ```
+    * factorial 을 ! 표현하기는 하지만 코드에서는 not 을 의미함
+    * +, -, ++, --, == 등 정해진 오버로딩 이외 사용 금지
+  + 분명하지 않은 경우
+  ```kotlin
+    val tripleHello = 3 * { print("Hello") } // 의미가 분명하지 않음
+    
+    val tripleHello = 3 timesRepeated  { print("Hello") } 
+    infix fun Int.timesRepeated(operation: ()-> Unit) = {
+        repeat(this) { operation() } // infix 활용
+    }
+    repeat(3) { print("Hello") } // 톱레벨 함수를 사용    
+  ```
+  + 규칙을 무시해도 되는 경우
+    * 도메인 특화 언어(DSL : Domain Specific Language) 설계 시
+    ```kotlin
+    body {
+        div {
+            +"Some Text" // String.unaryPlus 가 사용
+        }   
+    }
+    ```
+  <br></br>
+  
 - Unit? 을 리턴하지 말라
     + if (!isSuccess(key)) return 와 success(key) ?: return 을 
     오해를 하기 쉽고 눈에 잘 들어오지 않는다.
