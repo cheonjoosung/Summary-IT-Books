@@ -661,8 +661,25 @@
     <br></br>
     
 - 5.3 지연 계산(lazy) 컬렉션 연산
-  * 시퀀스 연산 실행: 중간 연산과 최종 연산
-  * 시퀀스 만들기
+  * map or filter 컬렉션을 즉시 생성함 -> 도중 계산 결과를 새로운 컬렉션에 임시로 담음
+  ```kotlin
+  people.map(Person::name).filter { it.startsWith("A") }
+  people.asSequenc()
+    .map(Person::name)
+    .filter { it.startsWith("A") }
+    .asList()
+  ```
+  * 시퀀스 연산 시 중간 임시 컬렉션이 생기지 않고 원소수가 많을 때 성능이 크게 좋아짐
+  * 5.3.1 시퀀스 연산 실행: 중간 연산과 최종 연산
+    + map &filter 변환이 늦춰져서 결과를 얻을 필요가 있을 때 적용 됨
+    ```kotlin
+    listOf(1,2,3,4).asSequence()
+      .map { print("map($it) ") ; it*it }
+      .filter { print("filter($it) ") ; it%2 == 0 }
+      .toList()
+    ```
+    + filter 를 통해 불필요한 요소 제거 후 map 으로 변환 작업 수행
+  * 5.3.2 시퀀스 만들기
 - 5.4 자바 함수형 인터페이스 활용
   * SAM(Single Abstract Method) 추상 메소드가 하나인 것
   * 자바 메서드에 람다를 인자로 전달 
