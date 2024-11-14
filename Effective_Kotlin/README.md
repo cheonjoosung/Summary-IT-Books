@@ -381,11 +381,16 @@
     ```
   <br></br>
   
-- Unit? 을 리턴하지 말라
-    + if (!isSuccess(key)) return 와 success(key) ?: return 을 
-    오해를 하기 쉽고 눈에 잘 들어오지 않는다.
+- #### Item 13 Unit? 을 리턴하지 말라
+  + if (!isSuccess(key)) return 와 success(key) ?: return 을 
+  오해를 하기 쉽고 눈에 잘 들어오지 않는다.
+  + boolean 을 사용하는 것이 좋음
+  ```kotlin
+  if (!ksyIsCorrect(key)) return
+  verifyKey(key) ?: return // 키가 없는 건지 실패한건지 한눈에 이해하기 어려움
+  ```
+  <br></br>
 
-<br></br>
 - 변수 타입이 명확하지 않는 경우 확실하게 지정
     + 코틀린은 수준 높은 타입 추론 시스템을 가지고 있음
     + 그러나, val data = getData() 보다는 val data: UserData = getData()
