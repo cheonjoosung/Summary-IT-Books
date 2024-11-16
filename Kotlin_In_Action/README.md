@@ -680,21 +680,51 @@
     ```
     + filter 를 통해 불필요한 요소 제거 후 map 으로 변환 작업 수행
   * 5.3.2 시퀀스 만들기
+  <br></br>
+  
 - 5.4 자바 함수형 인터페이스 활용
-  * SAM(Single Abstract Method) 추상 메소드가 하나인 것
-  * 자바 메서드에 람다를 인자로 전달 
-  * SAM 생성자: 람다를 함수형 인터페이스로 명시적으로 변경
-    - btn1.setOnClickListener(listener), btn2.setOnClickListener(listener) listener 를 반복사용
+  ```java
+  button.setOnClickListener(new OnClickListener() {
+    @Override
+    public void onClick(View v) {
+    }
+  });
+  ```
+  ```kotlin
+  button.setOnClickListener { view -> }
+  ```
+  * 이런 것이 가능 한 이유는 OnClickListener 에 추상 메서드가 단 하나기 때문이다
+    + 이 메소드를 함수형 인터페이스 또는 SAM(Single Abstract Method) 인터페이스라고 함
+    + 이 안에 메소드를 SAM method 라 함
+    + Runnable, Callable 도 있음
+  <br></br>
+  
+  * 5.4.1 자바 메서드에 람다를 인자로 전달
+    ```kotlin
+    void postponeComputation(int delay, Runnable computation)
+    postponeComputation(1000) { println(42) }
+    ```
+    + 컴파일러가 자동으로 람다를 Runnable 인스턴스로 변환 (무명 클래스의 인스턴스)
+    <br></br>
+    
+  * 5.4.2 SAM생성자 : 람다를 함수형 인터페이스로 명시적으로 변경
+    ```kotlin
+    val listener = OnClickListener { view ->
+    }
+    button1.setOnClickListener(listener)
+    ```
+    <br></br>
+    
 - 5.5 수신 객체 지정 람다: with 와 apply
   * with 함수
-    - 메서드를 호출하려는 수신 객체를 전달하고 내부적으로 this 를 사용해도 되고 생략도 가능
-    - 일반 함수는 일반 람다, 확장 함수는 수신 객체 지정 람다
+    + 메서드를 호출하려는 수신 객체를 전달하고 내부적으로 this 를 사용해도 되고 생략도 가능
+    + 일반 함수는 일반 람다, 확장 함수는 수신 객체 지정 람다
   * apply 함수
-    - 인스턴스를 만들고 apply에 이 값을 전달함
-    - 블럭 안에서 해당 수신 객체를 프로퍼티를 설정할 수 있음
-
-
-<br></br>
+    + 객체를 초기화 할 때 주로 사용
+    + 인스턴스를 만들고 apply에 이 값을 전달함
+    + 블럭 안에서 해당 수신 객체를 프로퍼티를 설정할 수 있음
+    <br></br>
+    
 ### 6장 코틀린 타입 시스템
 - 6.1 널 가능성
   * Null 가능성 NPE(NullPointerException 오류)를 피할 수 있도록 도와주는 코틀린 타입 시스템 특징
