@@ -323,40 +323,84 @@
   + 복잡한 부분, 계속해서 수정이 발생해서 리팩토링이 필요한 부분, 비즈니스 로직, 공용 API, 문제가 자주 발생하는 부분, 운영 버그
 
 ### 1-2. 가독성
-- 가독성을 목표로 삼아라
-    + if 를 활용한 null check 인간이 인지하는 속도를 느리게 함
-    ```kotlin
-      if (person != null && person.isAdult) {
-        // code
-      } else {
-        // error
-      }
-      //person 이 null 일때 에러인지, 성인이 아닐때 에러인지에 대한 이해가 더 필요
+- #### Item 11 가독성을 목표로 삼아라
+  + 인식 부하 감소
+  ```kotlin 
+    if (person != null && person.isAdult) {
+      // code
+    } else {
+      // error
+    }
+  
+    person?.takeIf { it.isAdult }
+    ?.let {
+        //code
+    }
+    ?.run {
+        //error 엘비스연산자 활
+    }
+  ```
+    * if-else 구문이 익숙하기에 눈에 잘 들어옴 (kotlin 의 경우 takeIf, elvis 연산자가 익숙하긴하나 복잡함)
+    * 가독성은 뇌가 프로그램의 작동 방식을 이해하는 과정을 더 짧게 만드는 것
+  + 극단적이 되지 않기
+    * let, run 을 무조건 쓰지 말라는 것이 아님
+    * 연산을 아규먼트 처리 후 이동시킬 때, 데코레이터를 사용해서 객체를 랩할 때 등 필요
+  + 컨벤션
+    * 연산자는 의미에 맞게 사용, 기존에 있는 기능을 새로 만들지 마라 등
+  <br></br>
+  
+- #### Item 12 연산자 오버로드를 할 때는 의미에 맞게 사용
+  + 함수에 맞는 이름을 사용(예외적으로 도메인 특화 언어는 가능)
+  ```kotlin
+  fun Int.factorial(): Int = (1..this).product()
+  fun Iterable<Int>product(): Int = fold(1) { acc, i -> acc * i }
+  
+  print(10 * 6.factorial()) // 7200
+  print(10 * 6!) // ? 
+  ```
+    * factorial 을 ! 표현하기는 하지만 코드에서는 not 을 의미함
+    * +, -, ++, --, == 등 정해진 오버로딩 이외 사용 금지
+  + 분명하지 않은 경우
+  ```kotlin
+    val tripleHello = 3 * { print("Hello") } // 의미가 분명하지 않음
     
-      person?.takeIf { it.isAdult }
-      ?.let {
-          //code
-      }
-      ?.run {
-          //error 엘비스연산자 활
-      }
+    val tripleHello = 3 timesRepeated  { print("Hello") } 
+    infix fun Int.timesRepeated(operation: ()-> Unit) = {
+        repeat(this) { operation() } // infix 활용
+    }
+    repeat(3) { print("Hello") } // 톱레벨 함수를 사용    
+  ```
+  + 규칙을 무시해도 되는 경우
+    * 도메인 특화 언어(DSL : Domain Specific Language) 설계 시
+    ```kotlin
+    body {
+        div {
+            +"Some Text" // String.unaryPlus 가 사용
+        }   
+    }
     ```
-<br></br>
-- 연산자 오버로드를 할 때는 의미에 맞게 사용
-    + 함수에 맞는 이름을 사용 계(예외적으로 도메인 특화 언어는 가능)
+  <br></br>
+  
+- #### Item 13 Unit? 을 리턴하지 말라
+  + if (!isSuccess(key)) return 와 success(key) ?: return 을 
+  오해를 하기 쉽고 눈에 잘 들어오지 않는다.
+  + boolean 을 사용하는 것이 좋음
+  ```kotlin
+  if (!ksyIsCorrect(key)) return
+  verifyKey(key) ?: return // 키가 없는 건지 실패한건지 한눈에 이해하기 어려움
+  ```
+  <br></br>
 
-<br></br>
-- Unit? 을 리턴하지 말라
-    + if (!isSuccess(key)) return 와 success(key) ?: return 을 
-    오해를 하기 쉽고 눈에 잘 들어오지 않는다.
-
-<br></br>
-- 변수 타입이 명확하지 않는 경우 확실하게 지정
-    + 코틀린은 수준 높은 타입 추론 시스템을 가지고 있음
-    + 그러나, val data = getData() 보다는 val data: UserData = getData()
-    로 쓰는 것이 프로그래머가 개발자가 코드를 더 쉽게 파악할 수 있음
-
-<br></br>
+- #### Item 14 변수 타입이 명확하지 않는 경우 확실하게 지정
+  + 코틀린은 수준 높은 타입 추론 시스템을 가지고 있음
+  ```kotlin
+  val data = getSomeData() 
+  val data: UserData = getSomeData() 
+  ```
+  + 타입을 명시하면 프로그래머가 개발자가 코드를 더 쉽게 파악할 수 있음
+  + 상속 또는 구현을 받은 클래스의 default 로 사용하다가 원치않는 결과를 만들 수도 있음
+  <br></br>
+  
 - 리시버를 명시적으로 참조하
     + let, run, apply, also 등을 사용하면 return 으로 this, it 등의 확장 리시버를 받는다
     + 중첩으로 된 구조에서 명시적인 참조를 안하면 의도치 않게 다른 값을 참조하는 실수를 범할 수 있다.
