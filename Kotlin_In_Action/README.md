@@ -727,63 +727,136 @@
     
 ### 6장 코틀린 타입 시스템
 - 6.1 널 가능성
-  * Null 가능성 NPE(NullPointerException 오류)를 피할 수 있도록 도와주는 코틀린 타입 시스템 특징
-  * Null 이 될 수 있는 타입
-    - Type? 를 통해 해당 인스터스가 널이 될 수 있는 값을 알려줘야 함
-  * 타입의 의미
-    - 어떤 값들이 가능한지와 그 타입에 대해 수행할 수 있는 연산의 종류
-    - 코틀린은 컴파일 타입에 모든 검사를 수행하기에 실행 시점 부가 비용이 들지 않음
-  * 안전한 호출 연산자: ?.
-    - 해당 값이 null 이 아닐 때 뒤의 연산을 수행한다
-  * 엘비스 연산자: ?:
-    - 이항 연산자로 좌항을 계산한 값이 널인지 체크하고 널인 경우 우항 값을 결과라 할당함
-  * 안전한 캐스트: as?
-    - as? 를 통해 타입을 원하는 타입인지 쉽게 검사하고 casting 까지 가능
-  * 널 아님 단언: !!
-    - 널이 될 수 없다고 단정하고 강제로 NotNull 형태로 타입 강제
-    - 잘못 생각해도 예외를 감수하겠다는 의미로 위험한 코드다
-  * let 함수
-    - Object?.let { } null이 아닐 경우 블록 안의 코드를 실행
-  * 나중에 초기화할 프로퍼티
-    - lateinit null 로 할당하는 대신에 사용 가능
-  * 널이 될 수 있는 타입 확장
-    - String 의 isNullOrBlank(), isNullOrEmpty() 널을 명시적으로 검사함
-  * 타입 파라미터의 널 가능성
-    - t: T 인 경우 널이 도리 수 없는 타입 상한을 지정해야 함
-  * 널 가능성과 자바
-    - 플랫폼 타입
-      + 코틀린이 널 관련 정보를 알 수 없는 타입
-      + 자바에서는 널을 체크를 따로 하지 않기에 메소드에 어노테이션을 통해 알려줘야 함
-    - 상속
-      + 자바 클래스 또는 인터페이스를 코틀린에서 구현할 경우널 가능성을 제대로 처리하는 것이 중요
+  * NPE(NullPointerException 오류)를 피할 수 있도록 도와주는 코틀린 타입 시스템 특징
+  * 6.1.1 Null 이 될 수 있는 타입
+    + Type? = Type or Null 로써 해당 인스턴스가 널이 될 수 있다는 것을 알려줘야 함
+    
+  * 6.1.2 타입의 의미
+    + java 의 경우 annotaion 으로 제공하나 이는 표준이 아니라 항상 일정한 결과를 보장하지 않음
+    + kotlin 의 null 타입은 여러 해법을 제공하고 컴파일 시점에 확실히 알 수 있기에 실행시간에 오류를 피할 수 있음
+    
+  * 6.1.3 안전한 호출 연산자: ?.
+    + 해당 값이 null 이 아닐 때 뒤의 연산을 수행한다
+    ```kotlin
+    if (s != null) s.toUpperCase() else null //if-else 반복적 의미없는 코드 작성 필요함
+    s?.toUpperCase() //훨씬 간단함
+    ```
+    + 안전한 호출을 가능하게 함
+    
+  * 6.1.4 엘비스 연산자: ?:
+    + 이항 연산자로 좌항을 계산한 값이 널인지 체크하고 널인 경우 우항 값을 결과라 할당함
+    ```kotlin
+    fun getName(user: User) user?.getName() ?: "no name"
+    ```
+    + ?: 연산자를 통해 default 값 설정도 가능하고, return & throw 사용도 가능
+    
+  * 6.1.5 안전한 캐스트: as?
+    + as? 를 통해 타입을 원하는 타입인지 쉽게 검사하고 casting 까지 가능
+    ```kotlin
+    foo as? type ?: return false
+    ```
+  
+  * 6.1.6 널 아님 단언: !!
+    + 널이 될 수 없다고 단정하고 강제로 NotNull 형태로 타입 강제
+    + 잘못 생각해도 예외를 감수하겠다는 의미로 위험한 코드다
+    + !! 포함한 식을 한번에 쓰면 NPE 발생 정보를 안알려주기에 여러줄로 나누어서 구현
+    
+  * 6.1.7 let 함수
+    + Object?.let { } null이 아닐 경우 블록 안의 코드를 실행
+    ```kotlin
+    s?.let { print(s.length) }
+    ```
+    
+  * 6.1.8 나중에 초기화할 프로퍼티
+    + lateinit null 로 할당하는 대신에 사용 가능하고 var 사용
+    ```kotlin
+    lateinit var user: User
+    if (::user.isInitialized) { /* 초기화여부 체크 */ }  
+    ```
+    
+  * 6.1.9 널이 될 수 있는 타입 확장
+    + String 의 isNullOrBlank(), isNullOrEmpty() 널을 명시적으로 검사함
+    
+  * 6.1.10 타입 파라미터의 널 가능성
+    + t: T 인 경우 널이 될 수 없는 타입 상한을 지정해야 함
+    
+  * 6.1.11 널 가능성과 자바
+    + 플랫폼 타입
+      - 코틀린이 널 관련 정보를 알 수 없는 타입
+      - 자바에서는 널을 체크를 따로 하지 않기에 메소드에 어노테이션을 통해 알려줘야 함
+    + 상속
+      - 자바 클래스 또는 인터페이스를 코틀린에서 구현할 경우널 가능성을 제대로 처리하는 것이 중요
+  <br></br>
+      
 - 6.2 코틀린의 원시 타입
-  * 원시 타입: Int, Boolean 등
-  * 널이 될 수 있는 원시 타입: Int?, Boolean? -> Wrapper로
-  * 숫자 변환
-    - 다른 타입의 숫자로 자동 변환하지 않고 toLong, toInt 등 직접 호출 필요
-    - 1.1 이상부터 숫자 사이에 _ 넣을 수 있음
-  * Any, Any?: 최상위 타입
-    - Any 는 자바에서 Object 클래스처럼 조상 타입임
-  * Unit 타입: 코틀린의 패ㅑㅇ
-    - 반환 타입을 명시하지 않거나 : Unit 으로 쓴 경우
-    - void 와 달리 타입 인자로 사용ㅇ 가능
-  * Nothing 타입: 이 함수는 결코 정상적으로 끝나지 않는다
-    - 정상적으로 끝나지 않는다는 표현 제공
-    - 함수의 반환 타입이나 타입 파라미터로 쓰임
+  * 6.2.1 원시 타입: Int, Boolean 등
+    + java 에서는 int/Integer 를 때에 따라 나눠 사용하지만 코틀린에서는 Int 하나만 사용
+    + 비효율적일것 같지만 실행실점에 가장 효율적인 타입으로 맞춰서 실행 됨
+    + 정수 타입 (Byte, Short, Int, Long)
+    + 부동소수점 수 타입 (Float, Double)
+    + 문자 타입 Char
+    + 불리언 Boolean
+    
+  * 6.2.2 널이 될 수 있는 원시 타입: Int?, Boolean? 등 
+    + 원시타입에 null 붙여서 사용하는 경우 컴파일 시 java 의 Wrapper Type 으로 컴파일 됨
+    
+  * 6.2.3 숫자 변환
+    + 다른 타입의 숫자로 자동 변환하지 않고 toLong, toInt 등 직접 호출 필요
+    + 1.1 이상부터 숫자 사이에 _ 넣을 수 있음
+    ```kotlin
+    val i = 1
+    val list = listOf(1L, 2L, 3L)
+    i in list // false 이고 묵시적 변환을 허용 안함
+    i.toLong() in list // true 이고 명시적 변환이 필요 
+    ```
+    + Long-l, Float-f or F, 16진수-0x or 0X, 2진수-0b, 0B
+    
+  * 6.2.4 Any, Any?: 최상위 타입
+    + Any 는 코틀린에서 최상위 타입, Object 가 java 최상위 클래스 인 것 처럼
+    + Any 선언 시 Object 로 컴파일 됨
+    
+  * 6.2.5 Unit 타입: 코틀린의 void
+    + 반환 타입을 명시하지 않거나 : Unit 으로 쓴 경우
+    + void 와 달리 타입 인자로 사용 가능
+    
+  * 6.2.6 Nothing 타입: 이 함수는 결코 정상적으로 끝나지 않는다
+    + 정상적으로 끝나지 않는다는 표현 제공
+    + 함수의 반환 타입이나 타입 파라미터로 쓰임
+  <br></br>
+  
 - 6.3 컬렉션과 배열
-  * 널 가능성과 컬렉션
-    - List<Int?> List<Int>? 는 전혀 다름. 원소가 null이 될수있는 것과 전체 리스트가 null 이 될수 있는 것의 차이
-    - filterNotNull 를 통해 List 에서 Null 이 아닌것을 필터할 수 있음
-  * 읽기 전용과 변경 가능한 컬렉션
-    - Collection 을 이용하여 만든 것이 MutableCollection 이고 add,remove, clear 등의 원소 추가,삭제,클리어 등 기능
-    - 읽기 전용 컬렉션이 항상 스레드 안전하지 않다는 점 명심
-  * 코틀린 컬렉션과 자바
-    - Iterable 를 구현한 MutableIterable, Collection 를 구현한 MutableCollection 자바 컬렉션 인터페이스의 구조를 그대로 옮겨 놓음
-  * 컬렉션을 플랫폼 타입으로 다루기
-    - 컬렉션이 널이 될 수 있는가? 원소가 널이 될 수 있는가? 오버라이드하는 메서드가 컬렉션을 변경할 수 있는가 등
-  의 사항을 반영해서 코드를 작성해야 함
-  * 객체의 배열과 원시 타입의 배열
-    - Array...
+  * 6.3.1 널 가능성과 컬렉션
+    + List<Int?> List<Int>? 는 전혀 다름. 원소가 null이 될수있는 것과 전체 리스트가 null 이 될수 있는 것의 차이
+    + filterNotNull 를 통해 List 에서 Null 이 아닌것을 필터할 수 있음
+    ```kotlin
+    fun check(list : List<Int?>) {
+      var invalidCount = 0
+      var validCount = 0
+      for (item in list) {
+        if (item == null) invalidCount++
+        else validCount++
+      }
+    }
+    ```
+    
+  * 6.3.2 읽기 전용과 변경 가능한 컬렉션
+    + Collection 을 이용하여 만든 것이 MutableCollection 이고 add,remove, clear 등의 원소 추가,삭제,클리어 등 기능
+    + 읽기 전용 컬렉션이 항상 스레드 안전하지 않다는 점 명심(한 객체를 여러 컬렉션이 바라보고 있는 경우)
+    
+  * 6.3.3 코틀린 컬렉션과 자바
+    + Iterable 를 구현한 MutableIterable, Collection 를 구현한 MutableCollection 자바 컬렉션 인터페이스의 구조를 그대로 옮겨 놓음
+    
+  * 6.3.4 컬렉션을 플랫폼 타입으로 다루기
+    + 컬렉션이 널이 될 수 있는가? 
+    + 원소가 널이 될 수 있는가? 
+    + 오버라이드하는 메서드가 컬렉션을 변경할 수 있는가 등  의 사항을 반영해서 코드를 작성해야 함
+    
+  * 6.3.5 객체의 배열과 원시 타입의 배열
+    + arrayOf 함수에 원소를 넘기면 배열 가능
+    + arrayOfNulls 함수에 정구밧을 인자로 넘기면 모든 원소가 null 이고 같은 크기의 배열
+    ```kotlin
+    val alphabet = Array<String>(26){ i -> ('a' + i).toString() }
+    ```
 
 
 <br></br>
