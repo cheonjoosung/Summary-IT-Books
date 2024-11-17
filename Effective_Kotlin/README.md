@@ -401,12 +401,45 @@
   + 상속 또는 구현을 받은 클래스의 default 로 사용하다가 원치않는 결과를 만들 수도 있음
   <br></br>
   
-- 리시버를 명시적으로 참조하
-    + let, run, apply, also 등을 사용하면 return 으로 this, it 등의 확장 리시버를 받는다
-    + 중첩으로 된 구조에서 명시적인 참조를 안하면 의도치 않게 다른 값을 참조하는 실수를 범할 수 있다.
-    + DslMarker annotation 사용 (DSL 사용 )
-
-<br></br>
+- #### Item 15 리시버를 명시적으로 참조하
+  ```kotlin
+  class Node(val name: String) {
+    fun makeChild(childName: String) =
+      create("$name.$childName").apply {
+          print("Created ${this?.name} in ${this@Node.name}")
+      } 
+    }
+  fun create(name: Stirng) : Node? = Node(name)
+  ```
+  + let, run, apply, also 등을 사용하면 return 으로 this, it 등의 확장 리시버를 받는다
+  + 중첩으로 된 구조에서 명시적인 참조를 안하면 의도치 않게 다른 값을 참조하는 실수를 범할 수 있다.
+  + DslMarker annotation 사용 (DSL 사용 )
+  ```kotlin
+  @DslMarker
+  annotation class HtmlDsl
+  
+  fun table(f: TableDsl.() -> Unit) { /**/ }
+  
+  @HtmlDsl
+  class TableDsl { /**/ }
+  
+  table {
+    tr {
+        td { +"Column 1" }
+        td { +"Column 2" }
+        this@table.tr {
+            td { +"value 1"}
+            td { +"value 2"}
+        } 
+    }
+  }  
+  ```
+  + DSL 마커
+    * 가장 가까운 리시버만을 사용하게 하거나
+    * 명시적으로 외부 리시버를 사용하지 못하게 할 때 활용할 수 있는 중요한 메커니즘
+    * tr 이 상위의 tr 인지 하위의 tr의 tr 인지 명확한 구분을 통해 오류 방지
+  <br></br>
+    
 - 프로퍼티는 동작이 아니라 상태를 표시
     + 자바의 필드와 코틀린의 프로퍼티는 엄연히 다름
     ```kotlin
