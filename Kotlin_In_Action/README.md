@@ -857,78 +857,184 @@
     ```kotlin
     val alphabet = Array<String>(26){ i -> ('a' + i).toString() }
     ```
+  <br></br>
 
 
-<br></br>
 ### 7장 연산자 오버로딩과 기타 관례
 - 7.1 산술 연산자 오버로딩
-  * 이항 산술 연산 오버로딩
-    - operator 키워드를 붙여서 관례 표시
-    - plus, minus, mod(1.1 부터 rem), div, times 가 함수이름
-    - 코틀린 연산자가 자동으로 교환법칙을 지원하지 않음
-  * 복합 대입 연산자 오버로딩
-    - +=, -=, *=, /= 와 같은 연산자
-    - plus, plusAssign 을 동시에 정의 no
-  * 단항 연산자 오버로딩
-    - unaryMinus, unaryMinus, ! - not, ++a or a++ - inc, --a or a-- - dec
+  * 7.1.1 이항 산술 연산 오버로딩
+    + operator 키워드를 붙여서 관례 표시
+    ```kotlin
+    data class Point(val x: Int, val y: Int) {
+        operator fun plus(other: Point): Point {
+            return Point(x + other.x, y + other.y)
+        }
+    }
+    
+    operator fun Point.plus(other: Point) : Point {
+        reutnr Point(x + other.x, y + other.y)
+    }
+    ```
+    + plus, minus, mod(1.1 부터 rem), div, times 가 함수이름
+    + 코틀린 연산자가 자동으로 교환법칙을 지원하지 않음 (ex: p*1.5, 1.5*p 는 다른 오버로딩 구현이 필요)
+    + shl(<< 왼쪽시프트), shr(>> 오른쪽시프트), ushr(오른쪽 시프트 >>>), and(& 비트 곱), or(| 비트합), xor(^ 비트배타합), inv(~비트반전)
+    
+  * 7.1.2 복합 대입 연산자 오버로딩
+    + +=, -=, *=, /= 와 같은 연산자 (ex: point += Point(3,4) -> point = point + Point(3,4)
+    + plus(a = a.plus(b)), plusAssign(a.plusAssing(b)) 을 동시에 정의 no
+  
+  * 7.1.3 단항 연산자 오버로딩
+    + unaryPlus(+a), unaryMinus(-a), !(!a), (++a, a++)(inc), (--a, a--)(dec)
+    ```kotlin
+    operator fun Point.unaryMinus(): Point {
+        return Point(-x, -y)
+    }
+    ```
+    <br></br>
+
 - 7.2 비교 연산자 오버로딩
-  * 동등성 연산자: equals
-    - 자바에서는 객체 비교를 위해 equals or compareTo 를 사용하지만 코틀린은 필요없음
-    - a == b => a?.equals(b) ?: (b == null)
-    - === 식별자 비교 연산자로 두 객체가 같은 값을 가르키는지 == 식별자는 값이 같은지
-  * 순서연산자: compareTo
-    - a >= b 연산은 a.compareTo(b) >= 0 으로 변겨오디어 계산 됨
-    - compareValuesBy(this, obj2, Class::property1, Class:property2) 순차적으로 비교
+  * 7.2.1 동등성 연산자: equals
+    + 자바에서는 객체 비교를 위해 equals or compareTo 를 사용하지만 코틀린은 필요없음
+    + a == b => a?.equals(b) ?: (b == null)
+    ```kotlin
+    class Point(val x: Int, val y: Int) {
+        override funb equals(obj: Any?) : Boolean {
+            if (obj === this) return true // 같은 객체 가리키는 지 확인
+            if (obj !is Point) return false // 같은 타입인지 체크
+            return obj.x == x && obj.y == y // 값 비교
+        }  
+    }
+    ```
+    
+  * 7.2.2 순서연산자: compareTo
+    + 원시타입의 값만 비교 가능
+    + a >= b 연산은 a.compareTo(b) >= 0 으로 변경되어 계산
+    ```kotlin
+    class Person(val firstName: String, val secondName: String) : Comparable<Person> {
+        override fun compareTo(other: Person): Int {
+            return compareValuesBy(this, other, Person::lastName, Person::firstName)
+        }
+    }
+    ```
+    <br></br>
+  
 - 7.3 컬렉션과 범위에 대해 쓸 수 있는 관례
-  * 인덱스로 원소에 접근: get & set
-    - 인덱스 연산자 [] 를 활용 함
-    - x[a, b] -> x.get(a, b) 로 치환
-  * in 관례
-    - in 은 컬렉션에 들어가있는지 검사로 contains() 와 대응한다.
-  * rangeTo 관례
-    - start..end start 이상 end 이하의 범위 start.rangeTo(end)
-  * for 루프를 위한 iterator 관례
-    - for (x in list) -> list.iterator() 를 호출
+  * 7.3.1 인덱스로 원소에 접근: get & set
+    + 인덱스 연산자 [] 를 활용 함
+    + x[a] -> x.get(a) 로 치환
+    + x[a, b] -> x.get(a, b) 로 치환
+    + x[a, b] = c -> x.get(a, b, c) 로 치환
+    ```kotlin
+    operator fun Point.get(index: Int) : Point {
+        reutnr when(index) {
+            0 -> x 
+            1 -> y 
+            else -> throw IndexOutOfBoundsException("Invalid coordinate $index")
+        }   
+    }
+    
+    operator fun Point.set(index: Int, value: Int) : Point {
+        reutnr when(index) {
+            0 -> x = value 
+            1 -> y = value
+            else -> throw IndexOutOfBoundsException("Invalid coordinate $index")
+        }   
+    }
+    ```
+    
+  * 7.3.2 in 관례
+    + in 은 컬렉션에 들어가있는지 검사로 contains() 와 대응한다.
+    + a in c -> c.contains(a) 로 치환되며 내부적으로 범위 안을 탐색
+    
+  * 7.3.3 rangeTo 관례
+    + start..end -> start.rangeTo(end) 치환
+    
+  * 7.3.4 for 루프를 위한 iterator 관례
+    + for (x in list) -> list.iterator() 를 호출
+    + 내부적으로 hasNext(), next() 호출을 반복하는 식으로 변환
+    <br></br>
+    
 - 7.4 구조 분해 선언과 component 함수
   * val (a, b) = p 는 a = p.component1, b = p.component2 순차적 할당으로 구조 분해 선언을 의미한다.
-  * 구조 분해 선언과 루프
-    - map 의 엔트리에서 component1, component2 를 꺼내 key,value 대입 가능
+  * 컴파일러가 자동으로 componentN 함수를 만들어 줌(5개 까지 값이 할당이 가능 함)
+  * 7.4.1 구조 분해 선언과 루프
+    + map 의 엔트리에서 component1, component2 를 꺼내 key,value 대입 가능
+    ```kotlin
+    val map = mapOf("1" to "one", "2" to "two")
+    for (entry in map.entries) {
+        val key = entry.component1()
+        val value = entry.component2()
+    }
+    ```
+    <br></br>
+  
 - 7.5 프로퍼티 접근자 로직 재활용: 위임 프로퍼티
   * 위임 - 객체가 직접 작업을 수행하지 않고 다른 도우미 객체가 그 작업을 처리하게 맡기는 디자인 패턴
-  * 위임 프로퍼티 소개
-    - var p: Type by Delegate()
-    - 컴파일러에 의해 생성된 get/set Value 를 통해 p의 값을 설정함
-    - 프로퍼티 위임을 사용해 초기화 지연이 가능
-  * 위임 프로퍼티 사용: by lazy() 사용한 프로퍼티 초기화 지연
-    - 객체의 일부분을 초기화하지 않고 필요한 경우에 초기화하여 사용하는 패턴
+  * 뒷받침하는 드에 단순히 저장하는 것보다 더 복잡한 방식으로 작동하는 프로퍼티를 쉽게 구현
+  * 7.5.1 위임 프로퍼티 소개
+    ```kotlin
+    class Foo {
+        var p: Type by Delegate()
+    }
+    
+    class Delegate {
+        operator fun getValue() { /*...*/ }
+        operator fun setValue() { /*...*/ }
+    }
+    ```
+    + 컴파일러에 의해 생성된 get/set Value 를 통해 p의 값을 설정함
+    + 프로퍼티 위임을 사용해 초기화 지연이 가능
+    
+  * 7.5.2 위임 프로퍼티 사용: by lazy() 사용한 프로퍼티 초기화 지연
+    + 객체의 일부분을 초기화하지 않고 **필요한 경우에 초기화하여 사용**하는 패턴
     ```kotlin
     class Email {}
+    
+    fun loadEmails(person: Person) : List<Email> {
+        return listOf()
+    }
 
     class Person(val name: String) {
     private var _emails: List<Email>? = null
+    val emails by lazy { loadEmails(this) } // 쉬운 표현
     
         val emails: List<Email>
             get() {
                 if (_emails == null) {
-                    _emails = emails
+                    _emails = loadEmails(this)
                 }
                 return _emails!!
             }
     }
+    
     ```
-    - 뒷받침하는 프로퍼티 기법 객체의 인스터스를 만들때는 emails 이 없고 emails 접근할 때 초기화를 진행
+    + 뒷받침하는 프로퍼티 기법 객체의 인스터스를 만들때는 emails 이 없고 emails 접근할 때 초기화를 진행
   다만 쓰레드 안전성이 떨어지고 프러포티가 많아질 수록 코드가 기하급수적으로 커진다
-    ```kotlin
-    val emails by lazy { loadEmails(this) }
-    ```
-    - lazy 함수는 기본적으로 쓰레드 안전함. 동기화에 사용할 락을 lazy 함수에 전달할 수도 있고 다중 스레드 환경에서
+    + lazy 함수는 기본적으로 쓰레드 안전함. 동기화에 사용할 락을 lazy 함수에 전달할 수도 있고 다중 스레드 환경에서
   사용하지 않을 프로퍼티를 위해 lazy 함수가 동기화를 하지 못하게 막을 수 있음
-  * 위임 프로퍼티 구현
-    - 프로퍼티가 바뀔 때마다 리스너에게 변경 통지할 경우 (UI 변경)
-  * 위임 프로퍼티 컴파일 규칙
-  * 프레임워크에서 위임 프로퍼티 활용
+    
+  * 7.5.3 위임 프로퍼티 구현
+    + 프로퍼티가 바뀔 때마다 리스너에게 변경 통지할 경우 (UI 변경)
+    ```kotlin
+    class Person(val name: String, val age: Int, val salary: Int) : PropertyChangeAware() {
+        private val observer = {
+            prop: KProperty<*>, oldValue: Int, newValue: Int ->
+            changeSupport.firePropertyChange(Prop.name, oldValue, newValue)
+        }
+        
+        var age: Int by Delegates.observable(age, observer)
+        var salary: Int by Delegates.observable(salary, observer)
+    }
+    ```
+    
+  * 7.5.4 위임 프로퍼티 컴파일 규칙
+  
+  * 7.5.5 프로퍼티 값을 맵에 저장
+    + 직렬화? 역질렬화 같은 개별 API 가 존재
 
+  * 7.5.6 프레임워크에서 위임 프로퍼티 활용
 <br></br>
+  
 ### 8장 고차 함수: 파라미터와 반환 값으로 람다 사용
 - 8.1 고차 함수 정의
   * 다른 함수를 인자로 받거나 반환하는 함수
