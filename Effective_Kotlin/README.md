@@ -473,32 +473,46 @@
     * 상태 변경이 일어나는 경우
   <br></br>
     
-- 이름있는 아규먼트 사용
-    + 디폴트 아규먼트
-    + 같은 타입의 파라미터 많은 경우
-    + 함수 타입의 파라미터가 있는 경우 
-    ```kotlin
-    //자바 스타일
-     observable.getUsers()
-            .subscribe((List<User> users) -> { // onNext
-                
-            }, (Throwable throwable) -> { // onError
-                
-            }, () -> { // onCompleted
-                
-            }) 
+- #### Item 17 이름있는 아규먼트 사용
+  ```kotlin
+  val text = (1..10).joinToString("|")
+  val text = (1..10).joinToString(separator = "|")
   
-    //코틀린 스타일 subscribe -> subscribeBy(자바 함수를 호출할 때 이름있는 
-    // 파라미터 사용할 수 없어서 별도 코틀린 함수 만들어야 함)
-     observable.getUsers()
-            .subscribe(
-                onNext = { users: List<User> -> },
-                onError = { throwable: Throawable ->  },
-                onCompledted = { _ -> }  
-            )
+  sleep(100)
+  sleep(timeMillis = 100)
+  ```
+  + joinToString() 함수를 알면 상관없지만 모르는 경우 아래의 코드가 명확한 정보를 전달해줌
+  + sleep() 또 마찬가지로 아규먼트 명시하면 시간을 헷갈리는 경우를 줄일 수 있음
+  + 디폴트 아규먼트
+    * 같은 타입의 파라미터 많은 경우 (이름있는 아규먼트 사용)
+    * 함수 타입의 파라미터가 있는 경우 (이름있는 아규먼트 사용)
+    ```kotlin
+    button({/** 1 **/}, {/** 2 **/})
+    button(onClick = {/** 1 **/}) {/** 2 **/}
     ```
+    
+    ```kotlin
+    //자바 스타일 주석을 통해 정보 전달
+    observable.getUsers()
+    .subscribe((List<User> users) -> {
+    // onNext
+    }, (Throwable throwable) -> {
+    // onError
+    }, () -> {
+    // onCompleted
+    })
+    
+    // 코틀린 스타일 subscribe -> subscribeBy
+    // (자바 함수를 호출할 때 이름있는 파라미터 사용할 수 없어서 별도 코틀린 함수 만들어야 함)
+    observable.getUsers()
+      .subscribe(
+        onNext = { users: List<User> -> },
+        onError = { throwable: Throawable ->  },
+        onCompledted = { _ -> }  
+      )
+    ```
+    <br></br>
 
-<br></br>
 - 코딩 컨센션 지키기
     + InteliJ 포매터 사용
     + 밑줄 그어지면 변경하고 자동정렬하면 됨
