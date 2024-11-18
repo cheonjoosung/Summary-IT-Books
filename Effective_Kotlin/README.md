@@ -440,28 +440,39 @@
     * tr 이 상위의 tr 인지 하위의 tr의 tr 인지 명확한 구분을 통해 오류 방지
   <br></br>
     
-- 프로퍼티는 동작이 아니라 상태를 표시
-    + 자바의 필드와 코틀린의 프로퍼티는 엄연히 다름
-    ```kotlin
-      String name = null
+- #### Item 16 프로퍼티는 동작이 아니라 상태를 표시
+  + 자바의 필드와 코틀린의 프로퍼티는 엄연히 다름
+  ```kotlin
+  String name = null
+  
+  var name:String? = null
+    get() = field?.uppsercase
+    set(value) {
+        if (!value.isNullOrBlank()) field = value
+    }
+  ```
+  + get(), set() 필드를 가짐
+    * field 는 데이터를 저장해 두는 백킹 필드에 대한 레퍼런스
+    * val 읽기전용 변수에서는 field 생성되지않고 var 에서 생성되고 이를 파생 프로퍼티(derived property) 라고 부름
+  + 프로퍼티 위임도 가능
+  ```kotlin
+  val db: Database by lazy { connectToDb() }
+  ```
+  + 확장 프로퍼티 (안드로이드) - preferences, inflater 만으로 접근이 가능
+  ```kotlin
+  val Context.preferences:SharedPreferences
+    get() = PreferenceManager.getDefaultShagedPreferences(this)
+  val Context.inflater: LayoutInfalte
+    get() = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflator 
+  ```
+  + 반복적이나 계산 요소가 들어가는 것은 프로퍼티가 아니라 함수로 구현
+    * 연산 비용 높거나 복잡도 O(1) 넘는 경구
+    * 비즈니스 로직 포함 하는 경우
+    * 매 연산이 같은 결과를 반환하지 않는 경우
+    * 변환의 경우 (ex: Int.toDouble())
+    * 상태 변경이 일어나는 경우
+  <br></br>
     
-      var name:String? = null
-        get() = field?.toUpperCase()
-        set(value) {
-            if (!value.isNullOrBlank()) field = value
-        }
-    ```
-    + 코틀린의 프로퍼티는 캡슐화 되어 있음
-    + 확장 프로퍼티 (안드로이드) - preferences, inflater 만으로 접근이 가능
-    ```kotlin
-      val Context.preferences:SharedPreferences
-            get() = PreferenceManager.getDefaultShagedPreferences(this)
-      val Context.inflater: LayoutInfalte
-            get() = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflator 
-    ```
-    
-
-<br></br>
 - 이름있는 아규먼트 사용
     + 디폴트 아규먼트
     + 같은 타입의 파라미터 많은 경우
