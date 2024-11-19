@@ -513,12 +513,29 @@
     ```
     <br></br>
 
-- 코딩 컨센션 지키기
-    + InteliJ 포매터 사용
-    + 밑줄 그어지면 변경하고 자동정렬하면 됨
-      
-      
-<br></br>
+- Item 18 코딩 컨센션 지키기
+  + 지키는 이유
+    * 어떤 프로젝트 접해도 쉽게 이해
+    * 다른 외부 개발자도 프로젝트의 코드 쉽게 이해
+    * 코드의 작동방식 쉽게 유추
+    * 코드 병합 & 일부 코드를 다른 곳으로 이동시키기 편해짐
+  + InteliJ 포매터 사용
+  + 밑줄 그어지면 변경하고 자동정렬하면 됨
+  ```kotlin
+  class Student(val id: String, val name: String, val age: Int, val school: String) : Person(id, age ,name) {
+  }
+  
+  class Student(
+    val id: String,
+    val name: String,
+    val age: Int,
+    val scholl: String
+  ) : Person(id, name, age) {
+  }
+  ```
+  + 각각의 파라미터를 다음줄에 작성을 하는 것을 따름(자바와 다름)     
+  <br></br>
+  
 ## 2. 코드설계
 ### 2-1. 재사용성
 - knowledge를 반복하여 사용하지 말라
