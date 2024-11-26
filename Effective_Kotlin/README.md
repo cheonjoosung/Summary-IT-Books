@@ -650,18 +650,25 @@
   ```
 <br></br>
 
-- 일반적인 알고리즘을 구현할 때 제네릭을 사용하라
+- #### Item 22. 일반적인 알고리즘을 구현할 때 제네릭을 사용하라
   + 프로그램의 안정성이 높아짐. 개발이 편해짐
+  + 대표적인 예로 stlib 에 filter 가 있음
   + 제네릭 제한
     * 구체적인 타입의 서브타입만 사용하게 타입을 제한
     * Any 타입을 활용하여 nullable이 아닌 타입 표시
     ```kotlin
     fun <T: Comparable<T>> Iterable<T>.sorted(): List { }
     
-    inline fun <T, R: Any> Iterable<T>mapNotNull()
+    fun <T: Animal> pet(animal: T) where T : GoodTempered { }
+    
+    inline fun <T, R: Any> Iterable<T>.mapNotNull(
+        transform: (T) -> R?
+    ) : List<R> {
+        return mapNotNullTo(ArrayList<R>(), transform)
+    }
     ```
+  <br></br>
 
-<br></br>
 - 타입 파라미터의 섀도잉을 피하라
   + 지역 변수가 외부 스코프의 프로퍼티를 가리는 경우
   + 클래스 타입 파라미터에서도 발생함
