@@ -609,7 +609,7 @@
     * TextUtils.isEmpty(str) 보다는 str.isEmpty() 가 사용하기 더 쉬움
   
 <br></br>
-- 일반적인 프로퍼티 패턴은 프로퍼티 위임으로 만들어라
+- #### Item 21. 일반적인 프로퍼티 패턴은 프로퍼티 위임으로 만들어라
   + lazy or Delegate(observable, vetoable, notnull)
     * 다양한 패턴을 만들 수 잇음 (리소스 바인딩, 의존성 주입, 데이터 바인딩 등) -> 어노테이션 필요
     * 코틀린에서는 type-safe 하게 만들 수 있음
@@ -620,8 +620,13 @@
     observed = true
   }
 
+  // Android
+  private val button: Button by bindView(R.id.button)
+  
+  // 위임을 공통화
   var token: String? by LoggingProperty(null)
-
+  var attemps: Int by LogginProperty(0)
+  
   private class LoggingProperty<T>(var value: T) {
 
     operator fun getValue(
@@ -643,8 +648,8 @@
     }
   }
   ```
-
 <br></br>
+
 - 일반적인 알고리즘을 구현할 때 제네릭을 사용하라
   + 프로그램의 안정성이 높아짐. 개발이 편해짐
   + 제네릭 제한
