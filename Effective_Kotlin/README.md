@@ -669,9 +669,10 @@
     ```
   <br></br>
 
-- 타입 파라미터의 섀도잉을 피하라
-  + 지역 변수가 외부 스코프의 프로퍼티를 가리는 경우
+- #### Item 23. 타입 파라미터의 섀도잉을 피하라
+  + 지역 변수가 외부 스코프의 프로퍼티를 가리는 경우 이를 섀도잉이라 함
   + 클래스 타입 파라미터에서도 발생함
+  + 의도와 다르게 동작할 수 있음
   ```kotlin
   class Forest(val name: String) {
      fun addTree(name: String) { 
@@ -683,15 +684,20 @@
   class Spruce: Tree
   
   class Forest<T: Tree> {
-    fun <T: Tree> addTree(tree: T) //독립적으로 동작
+    fun addTree(tree: T) //독립적으로 동작
   }
   
   val forest = Forest<Birch>()
   forest.addTree(Birch())
-  forest.addTree(Spruce())
+  forest.addTree(Spruce()) // Error type mismatch
+  
+  // type 제한을 두어서 사용해야 함
+  class Forest<T: Tree> {
+    fun <ST: Tree> addTree(tree: ST)
+  }
   ```
-
 <br></br>
+
 - 제너릭 타입과 variance 한정자를 활용하라
   + out 또는 in 으로 관련성을 주고자 할 때
   + out - 공변성(covariant) A가 B의 서브타입일때 Cup[A]가 Cup[B]의 서브타입
