@@ -1172,27 +1172,43 @@
 ### 9장 제네릭스
 - 9.1 제네릭 타입 파라미터
   * Map<K, V> 일 때 Map<String, Person> 을 넘겨서 타입을 인스턴스화 할 수 있음
-  * 제네릭 함수와 프로퍼티
-    - <T>를 통해 함수 타입 파라미터, 수신 객체, 반환 타입에 쓰임
+    + 컴파일러가 타입인자 및 타입 모두를 추론함
+  * 9.1.1 제네릭 함수와 프로퍼티
+    + <T>를 통해 함수 타입 파라미터, 수신 객체, 반환 타입에 쓰임
     ```kotlin
     fun <T> List<T>.slice(indices: IntRange): List<T>
     ```
-    - slice() 를 호출할때 타입을 명시하지 않는 경우 컴파일러가 추론함
-  * 제네릭 클래스 선언
-    - 자바처럼 클래스/인터페이스에 <>를 통해 제네릭하게 만들 수 있음
-  * 타입 파라미터 제약
-    - 클래스/함수에 사용할 수 있는 타입 인자를 제한하는 기능
-    - sum() 함수를 고려할 때 double, int 는 되지만 String 은 안되도록..
+    + slice() 를 호출할때 타입을 명시하지 않는 경우 컴파일러가 추론함
+    + 확장 프로퍼티만 제네릭하게 만들 수 있음 (일반 프로퍼티는 불가능)
+    
+  * 9.1.2 제네릭 클래스 선언
+    + 자바처럼 클래스/인터페이스에 <>를 통해 제네릭하게 만들 수 있음
+    ```kotlin
+    interface List<T> {
+        operator fun get(index: Int) : T
+    }
+    
+    class StringList: List<String> { } //type 구체화
+    class ArrayList<T>: List<T> { } // type T
+    ```
+    
+  * 9.1.3 타입 파라미터 제약
+    + 클래스/함수에 사용할 수 있는 타입 인자를 제한하는 기능
+    + sum() 함수를 고려할 때 double, int 는 되지만 String 은 안되도록..
     ```kotlin
     fun <T: Number> List<T>.sum() : T
     listOf(1,2,3).sum()
     listOf(1.0, 2.0, 3.0).sum()
-    listOf("1.0")
+    listOf("1.0") //error
+    
+    fun <T: Comparable<T>> max(first: T, second: T) { }
     ```
-    - 제약인자로 Comparable<T>도 가능
-    - where T:CharSequence, T: Appendable T에 대한 제약사항으로 두가지의 인터페이스를 구현하도록
-  * 타입 파라미터를 널이 될 수 없는 타입으로 한정
-    - T: Any 로 지정해서 null 이 발생할 수 없다는 것을 보장
+    + 제약인자로 Comparable<T>도 가능
+    + where T:CharSequence, T: Appendable T에 대한 제약사항으로 두가지의 인터페이스를 구현하도록
+    
+  * 9.1.4 타입 파라미터를 널이 될 수 없는 타입으로 한정
+    + T: Any 로 지정해서 null 이 발생할 수 없다는 것을 보장
+    
 - 9.2 실행 시 제네릭스의 동작: 소거된 타입 파라미터와 실체화된 타입 파라미터
   * JVM 제네릭스는 타입 소거를 사용하여 구현 됨
   * 코틀린에서 함수 inline 을 통해 타입 인자가 안지워지는 "실체화 reify"
