@@ -698,26 +698,86 @@
   ```
 <br></br>
 
-- 제너릭 타입과 variance 한정자를 활용하라
+- #### Item 24. 제너릭 타입과 variance 한정자를 활용하라
+  + variance out or in 키워드가 없는 경우 불공변성(invariant)라 함
+  ```kotlin
+  class Cup<T>
+  Cup<Int>
+  Cup<Number>
+  Cup<Any>
+  ```
+    * 제너릭 타입으로 만들어지는 타입들이 전혀 관련이 없다는 뜻임
   + out 또는 in 으로 관련성을 주고자 할 때
-  + out - 공변성(covariant) A가 B의 서브타입일때 Cup[A]가 Cup[B]의 서브타입
-  + in - 반변성(contravariant) A가 B의 서브타입일때 Cup[A]가 Cup[B]의 슈퍼타입
+    * out - 공변성(covariant) A가 B의 서브타입일때 Cup[A]가 Cup[B]의 서브타입
+    ```kotlin
+    class Cup<out T>
+    open class Dog
+    class Puppy: Dog()
+       
+    fun main() {
+        val b: Cup<Dog> = Cup<Puppy>() // ok
+        val a: Cup<Puppy> = Cup<Dog>() // 오류
+    }
+    ```
+    * in - 반변성(contravariant) A가 B의 서브타입일때 Cup[A]가 Cup[B]의 슈퍼타입
+    ```kotlin
+    class Cup<in T>
+    open class Dog
+    class Puppy: Dog()
+       
+    fun main() {
+        val b: Cup<Dog> = Cup<Puppy>() // 오류
+        val a: Cup<Puppy> = Cup<Dog>() // OK
+    }
+    ```
   + 함수타입
     * (Int) -> Any 는 (Int) -> Number, (Number) -> Any 등으로 다양하게 작동
-    * 파라미터 타입은 contravariant 이고 리턴타입은 covariant 
-  + variance 한정자와 안정성능
+    * 파라미터 타입은 상위 계층 타입으로 이동이 가능하고 리턴 타입은 하위 계층 타입으로 이동 가능
+    ```kotlin
+    val intToDouble: (Int) -> Number = { it.toDouble() }
+    val numberAsText: (Number) -> Any = { it.toShort() }
+    val identity: (Number) -> Number = { it }
+    val numberToInt: (Number) -> Int = { it.toInt() }
+    val numberHash: (Any) -> Number = { it.hashCode() }
+    ```
+    * 코틀린 함수 타입의 모든 파라미터 타입은 contrvariant 
+    * 코틀린 함수 타입의 모든 리턴 타입은 covariant
+    * List 에는 out 한정자가 붙어있지만 MutalbleList 에는 붙지 않음
+    ```kotlin
+    (T1 in, T2 in) -> T out 
+    ```
+  + variance 한정자의 안정성능
     * 자바의 배열은 covariant 코틀린은 invariant 묵시적으로 업캐스팅을 한다.
     ```kotlin
     Integer [] numbers = {1, 4, 2, 1}
     Object[] objects = numbers
-    objects[2] = "B" //자바에서 에러 아직 Integer이기에.
+    objects[2] = "B" //자바에서 에러 아직 Integer임
+    // 코틀린에서는 Array<Int> -> Array<Any> 변환이 가능 invariant
     ```
-    * Response - 네트워크 응답 데이 
+    * 파라미터 타입을 예상이 가능하다?
+    * Response<T> 라면 T의 모든 서브타입 허용 ex) Response<Any> 라면 Response<Int>, Response<String> 가능
+    * Response<T1, T2> 라면 T1과 T2 의 모든 서브타입 허용
+    * Failure<T> 라면 T의 모든 서브타입 Failure 허용 
     ```kotlin
-    Response<T> 인 경우 Any가 예상되면 Int, String 가
+    sealed class Response<out R, out E>
+    class Failure<out E>(val error: E) : Response<Nothing, E>()
+    class Success<out R>(val value: R) : Response<R, Nohting>()
     ```
-
-<br></br>
+    * contravariant 타입 파라미터(in 한정자)를 public out 한정자 위치에 사용하는 것을 금지하고있다
+  + variance 한정자 위치
+    * 선언 부분과 클래스/인터페이스를 활용한 위치
+    ```kotlin
+    class Box<out T>(val value: T) //선언
+    val boxStr: Box<String> = Box("str")
+    val boxAny: Box<out Any> = boxStr
+    ```
+    * MutableList 는 in 한정자를 포함하면 요소를 리턴활 수 없으므로 in 한정자 안 붙음
+    * 단일타입에 in 한정자를 붙여 contravariant 를 가지게하여 여러 가지 타입을 받아들이게 할 수 있음
+  + 정리
+    * 리턴만 되는 타입에는 covariant(out 한정자) 사용
+    * 허용만 되는 타입에는 contracovariant(in 한정자) 사용
+    <br></br>
+    
 - 공통 모듈을 추출해서 여러 플랫포에서 사용하라
   + 풀스택 개발(JS를 활용) -> 하이브리드 개
 
