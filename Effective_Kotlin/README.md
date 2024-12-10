@@ -813,34 +813,47 @@
         pourMilk()
     }
     
-    fun makeEsprressoCoffee() {
+    fun makeEspressoCoffee() {
         boilWater()
         brewCoffee()
         pourCoffe()
     }
     ```
     * 추상화를 해놓으면 에스프레소는 우유붓기만 빼고 조합을 하면 되니 간편히 개발 가능하고 테스트도 쉬워짐
-
-<br></b>
-- 변화로부터 코드를 보호하려면 추상화를 사용하라
+<br></br>
+    
+- #### Item 27. 변화로부터 코드를 보호하려면 추상화를 사용하라
   + 상수 
     * const val min = 7 보다는 const val MIN_PASSWORD_LENGTH가 좋음
+    ```kotlin
+    const val MIN_PASSWORD_LENGTH = 7
+   
+    fun isPasswordValid(text: String) {
+       if (text.length < 7) return
+       if (text.length < MIN_PASSWORD_LENGTH) return 
+    }
+    ```
+    * 상수를 사용하면 일일히 수정하지 않고 한번에 모든것을 변경이 가능해짐
   + 함수 
     * 안드로이드에서 toast, snackbar, showMessage 같은 것을 확장함수로 만들면 편히 사용 가능
   + 클래스
+    * 클래스는 함수와 달리 상태를 가지기에 더 강력하다
     * 기본적으로 final이고 open은 통해 서브클래스 제공으로 자유도 조금 높아짐. 추상화를 통해 더 자유로움
   을 제공할 수 있음
   + 인터페이스
     * 인터페이스 뒤에 객체를 숨겨 실질적인 구현을 추상화하고 사용자가 추상화된 것에만 의존하게 만든다
+    * listOf 팩토리 메소드로 List 를 리턴함
+    * 컬렉션 처리 함수는 Iterable 또는 Collection 의 확장함수로 List, Map 등을 반환
+    * 프로퍼티 위임은 모두 인터페이스로
     이러면 결함을 줄일 수 있음
     * listOf or Iterable or Collection 은 인터페이스를 리턴하는데 각 플랫폼마다 다른 리스틀 리턴
     최적화 때문에..? 하지만 모두 인터페이스에 맞춰져 있으므로 차이없게 사용이 가능하다?
   + ID 만들기
     * id 값을 숨기고 get을 통해 제공
   + 균형이 필요
-    * 팀의 크기, 경험, 프로젝트 규모, 도메인 지식 
-
-<br></b>
+    * 팀의 크기, 경험, 프로젝트 규모, 도메인 지식
+<br></br>
+    
 - API 안정성을 확인하라
   + 표준 API를 사용해야 함
     * 변경 시 수동 업데이트를 해야 함
