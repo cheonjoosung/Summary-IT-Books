@@ -902,12 +902,19 @@
   + 규약은 개발자들의 단순한 합의
   + hashCode() 가 구현되지 않으면 HashSet 과 함께 사용할 때 제대로 동작하지 않음
   + equals() 구현하지 않아 중복을 허용할 수도 있음
-
-<br></b>
-### 2-3. 객체 생성
 <br></br>
-- 생성자 대신 팩토리 함수를 사용하라
-  + 생성자의 역할을 대신 해 주는 함수가 팩토리 함수
+  
+## 5장 객체 생성
+
+- #### Item 33. 생성자 대신 팩토리 함수를 사용하라
+  + 생성자 말고도 함수, 패턴 등으로 객체 생성이 가능함
+  + 생성자 역할을 대신 해 주는 함수가 팩토리 함수
+    * 함수의 이름을 붙여 방법과 아규먼트가 무엇이 필요한지 명확히 전달
+      * ArrayList(3) 보다는 ArrayList.withSize(3) 이해하기 더 쉬워보인다.
+    * 함수가 원하는 타입을 리턴 가능 : 인터페이스 뒤에 실제 객체의 구현을 숨길 때 유용 listOf
+      * 코틀린 자바/JS/Native 에 따라 맞는 컬렉션 형태로 제공함
+    * 매번 생성하는 것이 아니라 이미 생성되어있으면 반환 (싱글턴)
+    * inline 형태로 구현 가능하며 복잡한 형태로 구현도 가능
   ```kotlin
   class MyLinkedList<T> (
     val hear: T,
@@ -924,10 +931,27 @@
   
   val list = myLinkedListOf(1, 2)
   ```
-  + 생성자와 다르게 이름을 붙여서 사용 ArrayList(3) 보다는 ArrayList.withSize(3)이
-    이해하기 더 쉬워보인다.
-  + companion, 확장, 톱레벨, 가짜 생성자, 팩토리 클래스의 메소드 등이 있음
-  + 이름 가진 - Date.from, EnumSet.of, BigInteger.valueOf, StackWalker.getInstance 등
+  + companion 객체 팩토리 함수
+    * 가장 쉬운 팩토리 함수 정의하는 일반적인 방법
+    ```kotlin
+    class Test {
+        companion object {
+            fun <T> of(vararg elements: T): MyLinkedList<T>? {
+                /**/
+            }   
+        }    
+    }
+    ```
+    * 자바에서 static method 와 동일
+    ```kotlin
+    val date: Date = Date.from(instance)
+    val faceCards: Set<Rank> = EnumSet.of(JACK, QUEEN, KING)
+    val prime: BigInteger = BigInteger.valueOf(Integer.MAX_VALUE)
+    val luke: StackWalker = StackWalker.getInstacne(options)
+    val newArray = Array.newInstance(classObject, arrayLen)
+    val fs: FileStore = Files.getFileStore(path)
+    val br: BufferedReader = Files.newBufferedReader(path)
+    ```
   + 확장 팩토리 함수
     * 재정의
     ```kotlin
@@ -938,11 +962,12 @@
   + 톱레벨 팩토리 함수
     * listOf, setOf, mapOf
   + 가짜 생성자
-    * invoke 함수를 갖는...
+    * 인터페이스를 위한 생성자를 만들고 싶을 때
+    * reified 아비 아규먼트를 갖게 하고 싶을 때
+    * invoke 함수를 갖는... 톱레벨 함수를 사용
   + 팩토리 클래스의 메서드
-    * 
-
-<br></b>
+  <br></br>
+  
 - 기본 생성자에 이름 있는 옵션 아규먼트를 사용하라
   + 생성자시 그냥 입력보다는 parameter="" 로 하면 좋음
 - 빌더 패턴
