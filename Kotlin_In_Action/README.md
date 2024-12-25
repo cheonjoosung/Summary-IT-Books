@@ -1208,18 +1208,19 @@
     
   * 9.1.4 타입 파라미터를 널이 될 수 없는 타입으로 한정
     + T: Any 로 지정해서 null 이 발생할 수 없다는 것을 보장
+    <br></br>
     
 - 9.2 실행 시 제네릭스의 동작: 소거된 타입 파라미터와 실체화된 타입 파라미터
   * JVM 제네릭스는 타입 소거를 사용하여 구현 됨
   * 코틀린에서 함수 inline 을 통해 타입 인자가 안지워지는 "실체화 reify"
-  * 실행 시점의 제네릭: 타입 검사와 캐스트
-    - List<String> 객체를 만들고 문자열을 넣더라도 실행 시점에 그 객체를 오직 List 로만 볼 수 있음
-    - if (list is List<String>) { } 를 사용하면 컴파일 오류가 발생함 (cannot check for instance of erased type)
-    - 저장해야 하는 타입 정보가 줄어드므로 메모리 사용량이 줄어들기에 제네릭 타입 소거 나름의 장점이 존재
-    - 스타 프로젝션 (*) 을 사용해서 확인이 가능
-    - Collection<*> type 으로 받은 후에 List<Int> 타입캐스팅 시 컴파일 에러가 발생하므로 throw exception 으로 unchecked 를 해결하면 됨
-  * 실체화한 타입 파라미터를 사용한 함수 선언
-    - inline & reified 를 통해 실체화하여 사용 시
+  * 9.2.1 실행 시점의 제네릭: 타입 검사와 캐스트
+    + List<String> 객체를 만들고 문자열을 넣더라도 실행 시점에 그 객체를 오직 List 로만 볼 수 있음
+    + if (list is List<String>) { } 를 사용하면 컴파일 오류가 발생함 (cannot check for instance of erased type)
+    + 저장해야 하는 타입 정보가 줄어드므로 메모리 사용량이 줄어들기에 제네릭 타입 소거 나름의 장점이 존재
+    + 스타 프로젝션 (*) 을 사용해서 확인이 가능
+    + Collection<*> type 으로 받은 후에 List<Int> 타입캐스팅 시 컴파일 에러가 발생하므로 throw exception 으로 unchecked 를 해결하면 됨
+  * 9.2.2 실체화한 타입 파라미터를 사용한 함수 선언
+    + inline & reified 를 통해 실체화하여 사용 시
     ```kotlin
     fun <T> isA(value: Any) = value is T //compile Error
     inline fun <reified T> isA(value: Any) = value is T
@@ -1228,10 +1229,10 @@
         return filterIsInstanceTo(ArrayList<R>())
     }
     ```
-    - list 에 문자열, 숫자형이 섞여있을 때 list.filterIsInstance<String>() 을 통해 특정 타입만 가져올 수 있음
-  * 실체화한 타입 파라미터로 클래스 참조 대신
-    - val serviceImpl = ServiceLoader.load(Service::class.java)
-    - 안드로이드 코드의 startActivity() 를 편하게 쓸 수 있음
+    + list 에 문자열, 숫자형이 섞여있을 때 list.filterIsInstance<String>() 을 통해 특정 타입만 가져올 수 있음
+  * 9.2.3 실체화한 타입 파라미터로 클래스 참조 대신
+    + val serviceImpl = ServiceLoader.load(Service::class.java)
+    + 안드로이드 코드의 startActivity() 를 편하게 쓸 수 있음
     ```kotlin
     inline fun <reified T: Activity> Context.startActivity(){
         val intent = Intent(this, T::class.java)
@@ -1240,17 +1241,18 @@
     
     startActivity<DetailActivity>()
     ```
-  * 실체화한 타입 파라미터의 제약
-    - 다음과 같은 경우
+  * 9.2.4 실체화한 타입 파라미터의 제약
+    + 다음과 같은 경우
       * 타입 검새와 캐스팅(is, !is, as, as?)
       * 리플렉션 API(::class),
       * 코틀린 타입에 대응하는 java.lang.Class 얻기
       * 다른 함수를 호출할 때 타입 인자로 사용
-    - 불가능한 경우
+    + 불가능한 경우
       * 타입 파라미터의 클래스의 인스턴스 생성
       * 타입 파라미터 클래스의 동반 객체 메서드 호출
       * 실체화한 타입 파라미터를 요구하는 함수를 호출하면서 실체화하지 않은 타입 파라미터로 받은 타입을 타입 인자로 넘기기
       * 클래스, 프로퍼티, 인라인 함수가 아닌 함수의 타입 파라미터를 reified 로 지정
+      
 - 9.3 변성: 제너릭과 하위 타입
   * 변성이 있는 이유: 인자를 함수에 넘기기
     - Any 타입으로 받는 함수에서 원소의 수정/삭제가 나는 경우 특정 타입으로 받게 되면 실행도중 에러가 발생할 수 있음
