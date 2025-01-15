@@ -995,8 +995,21 @@
       * DSL 지원하지 않는 다른 언어에서 쉽게 사용하는 API 만들 때
     <br></br>
       
-- 복잡한 객체를 생성하기 위한 DSL
+- #### Item 35. 복잡한 객체를 생성하기 위한 DSL
   + DSL(Domain Specific Language)
+    ```kotlin
+    body {
+        div {
+            a("https://kotlinlang.org") {
+                target = ATarget.blank
+                +"Main site"
+            }   
+        }   
+        +"Some content"
+    }
+    ```
+    * 복잡하고 계층적인 자료 구조를 쉽게 만들 수 있음
+    * type-safe 하며 그루비와 다르게 여러 유용한 힌트 활용 가능
   + 사용자 정의 DSL 만들기
     * () -> Unit 아규먼트를 갖지 않고 & 리턴 Unit
     * (Int) -> Unit 아큐먼트 Int & 리턴 Unit
@@ -1004,11 +1017,34 @@
     * (()->Unit) -> Unit 아규먼트 함수 & 리턴 Unit
     * 람다 표현식, 익명함수, 함수 레퍼런스
     * 리시버를 가진 람다 표현식으로 정의하면 this 키워드가 이를 참조
+      ```kotlin
+      val myPlus: Int.(Int) -> Int = {this + it}
+      
+      myPlus.invoke(1,2)
+      myPlus(1,2)
+      1.myPlus(2)
+      ```
       + 일반적인 객체처럼 invoke 메서드 사용
       + 확장 함수가 아닌 함수처럼 사용
     * DSL Builder 를 만들고 파라미터를 활용해서 값들은 처리
+      ```kotlin
+      fun createTable(): TableDsl = table {
+        tr {
+            for (i in 1..2) {
+                td {
+                    +"This is column $i"
+                }     
+            }
+        }
+      }
+      ```
+  + 언제 사용할까?
+    * 복잡한 자료 구조
+    * 계층적인 구조
+    * 거대한 양의 데이터
+    <br></br>
 
-<br></br>
+
 ### 2-4. 클래스 설계
 - 상속보다는 컴포지션을 사용하라
   + 간단한 행위 재사용
