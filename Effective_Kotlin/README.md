@@ -1083,20 +1083,29 @@
     <br></br>
     
 
-- 데이터 집합 표현에 data 한정자를 사용하라
-  + toString(), equals & hashCode, copy, componentN(component1, component2) 자동생성
-  + copy 는 immutable 를 만들 때 유용, shallow-copy
-  + componentN은 순서대로 맵핑을 시킬 수 있음
-  + 최소 2개 이상을 가지도록...
+- #### Item 37. 데이터 집합 표현에 data 한정자를 사용하라
+  + data 한정자
+    * toString(), equals & hashCode, copy, componentN(component1, component2) 자동생성
+    * copy() 의 경우 Immutable 데이터 클래스 만들 떄 편리 (shallow-copy : 얕은 복사 사용)
+    * componentN()
+      + val (first, second, third) = list 이런식으로 사용
   + 튜플 대신 데이터 클래스 사용하기
     * 튜플은 Serializable 기반으로 만들어지고 toString을 사용할 수 있는 제네릭 데이터 클래스
     * Pair, Triple 이 있는데 코틀린에 남아있는 마지막 튜플
     * 집합용도로 표현시는 좋음
-      
+    ```kotlin
+    val (description, color) = when {
+        degrees < 5 -> "color" to Color.BLUE
+        degrees < 23 -> "mild" to Color.YELLOW
+        else -> "hot" to Color.RED
+    }
+    
+    val (odd, even) = numbers.filter { it % 2 == 1 }
+    val map = mapOf(1 to "San Francisco", 2 to "LA")
+    ```
+    <br></br>
 
 
-<br></br>
-## 3. 효율성
 - 연산 또는 액션을 전달할 때는 인터페이스 대신 함수 타입을 사용
   + SAM(Single Abstract Method) - 메소드가 하나만 있는 인터페이스
   ```kotlin
