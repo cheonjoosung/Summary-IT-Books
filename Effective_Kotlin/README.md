@@ -1154,20 +1154,32 @@
   <br></br>
 
 
-- equals 규악을 지켜라
+- #### Item 40. equals 규악을 지켜라
   + Any 에는 equals, hashCode, toString 메서드들이 잘 설정된 규약을 가지고 있음
   + 동등성
-    * 구조적 동등성 ==, != 값
-    * 레퍼런스적 동등성 ===, !== 객체
+    * 구조적 동등성 ==, != 값의 비교
+    * 레퍼런스적 동등성 ===, !== 객체가 가리키는 주소
   + equals 가 필요한 이유
-    * 객체를 비교할 때 class 를 사용하면 equals 를 따로 구현해야함 -> data 한정자를 사용(final 임)
+    * Any 클래스에 구현되어 있는 equals 메서드느 디폴르톨 ==== 같은 객체인지 비교함
+    * 직접구현
+      + data 한정자가 없거나 비교해야 할 프로퍼티가 클래스에 없는 경우
+      + 일부 프로퍼티만 비교해야 하는 경우
+      + 기본적으로 제공하는 동작과 다른 동작을 하는 경우
   + equals 의 규약
-    * 반사적, 대칭정, 연속적, 일관적, null 관련된 동작
+    * 반사적 x.equals(x) = true
+    * 대칭정 x.equals(y) 와 y.equals(x) 는 값은 결과 값
+    * 연속적 x.equals(y) true 이고 y.equals(z) true -> x.equals(z) true 
+    * 일관적 x.equals(y) 는 여러번 하더라도 같은 값 리턴
+    * null 관련된 동작 x가 널이 아니라면 x.equals(null) 은 항상 false
+    * 내부적으로 빠르게 동작해야 함
   + URL equals
     * https://en.wiki 와 https://wiki 는 사실상 같은 주소인데 인터넷의 연결여부에 따라 달라짐 ->
     설계가 잘못되어 있음.
+  + equals 구현하기
+    * 특별한 이유가 없는 이상 직접 equals 를 구현하는 것은 좋지 않습니다
+    <br></br>
+    
 
-<br></br>
 - hashCode 규악을 지켜라
   + 해시 테이블
     * 해쉬 테이블은 각 요소에 숫자를 할당하는 해시 함수가 필요
