@@ -1254,13 +1254,13 @@
       * 클래스, 프로퍼티, 인라인 함수가 아닌 함수의 타입 파라미터를 reified 로 지정
       
 - 9.3 변성: 제너릭과 하위 타입
-  * 변성이 있는 이유: 인자를 함수에 넘기기
-    - Any 타입으로 받는 함수에서 원소의 수정/삭제가 나는 경우 특정 타입으로 받게 되면 실행도중 에러가 발생할 수 있음
-    - String 타입을 던졌는데 내부에서 정수형의 원소를 수정/삭제하게 된 경우 컴파일은 문제가 없지만 런타임 에러가 발생
-  * 클래스, 타입, 하위 타입
-    - Int 는 Number 의 하위 타입이지만 String 은 아님
-    - 상위 타입은 하위 타입의 반대 개념
-    - Int? 의 하위 타입은 Int 가 맞다
+  * 9.3.1 변성이 있는 이유: 인자를 함수에 넘기기
+    + Any 타입으로 받는 함수에서 원소의 수정/삭제가 나는 경우 특정 타입으로 받게 되면 실행도중 에러가 발생할 수 있음
+    + String 타입을 던졌는데 내부에서 정수형의 원소를 수정/삭제하게 된 경우 컴파일은 문제가 없지만 런타임 에러가 발생
+  * 9.3.2 클래스, 타입, 하위 타입
+    + Int 는 Number 의 하위 타입이지만 String 은 아님
+    + 상위 타입은 하위 타입의 반대 개념
+    + Int? 의 하위 타입은 Int 가 맞다
     ```kotlin
     val s: String = "abc"
     val t: String? = s
@@ -1271,7 +1271,7 @@
     - Any-String 은 상위-하위 관계가 맞미나 List<Any> - List<String> 이들은 아니다
     - 제네릭 타입을 인스턴스화 할 때 타입 인자로 서로 다른 타입이 들어가고 인스턴스 타입 사이의
   하위 타입 관계가 성립하지 않으면 그 제네릭 타입을 "무공변"(invariant) 라고 함
-  * 공변성: 하위 타입 관계를 유지
+  * 9.3.3 공변성: 하위 타입 관계를 유지
     - Animal-Cat 관계를 Producer<Animal>-Producer<Cat> 도 유지하기 위해서 out 키워드 사용하여
     공변적이라고 선언
     ```kotlin
@@ -1286,7 +1286,7 @@
     }
     ```
     - out 은 읽기 전용으로 사용
-  * 반공변성: 뒤집힌 하위 타입 관계
+  * 9.3.4 반공변성: 뒤집힌 하위 타입 관계
     - 타입을 소비... 쓰기가 가능해짐
     ```kotlin
     interface Comparator<in: T> {
@@ -1299,10 +1299,21 @@
         operator fun invoke(p: P): R // P는 in 의 위치, R은 out 의 위치
     }
     ```
-  * 사용 지점 변성: 타입이 언급되는 지정에서 변성 지정
+  * 9.3.5 사용 지점 변성: 타입이 언급되는 지정에서 변성 지정
     - in/out 의 위치에 따라 타입 프로젝션이 일어남. MutableList 가 아니라 MutableList 프로젝션을 한 제약 타입
+    ```kotlin
+    fun <T: R, R> CcopyData(source: MutableList<T>, destinationL MutalbeList<R>) {
+        for (item in source) destination.add(item)
+    }
+    
+    val ints = mutableListOf(1,2,3)
+    val anyItems = mutableListOf<Any>()
+    copyData(ints, anyItems) //Int 가 Any 의 하위타입이고
+    ```
   * 스타 프로젝션: 타입 인자 대신 * 사용
-    - 위험할 수 있음 String 으로 받은 후에 Number 연산을 하면 에러가 나기에 타입체크 필수
+    - * 와 Any 는 전혀 다름 
+      + * 는 정해진 구체적인 타입의 원소만 담음
+      * Any 는 아무거나 다 받음
     - * -> out Any? 처럼 동작함
 
 
