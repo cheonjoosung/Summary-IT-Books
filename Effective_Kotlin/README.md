@@ -1106,7 +1106,7 @@
     <br></br>
 
 
-- 연산 또는 액션을 전달할 때는 인터페이스 대신 함수 타입을 사용
+- #### Item 38. 연산 또는 액션을 전달할 때는 인터페이스 대신 함수 타입을 사용
   + SAM(Single Abstract Method) - 메소드가 하나만 있는 인터페이스
   ```kotlin
   interface OnClick {
@@ -1118,10 +1118,25 @@
     * 인터페이스보다 함수타입을 사용하면 이벤트의 수정이 일어날 때 자유롭게 가능함. 하지만 인터페이스는 구현하는 모든
   클래스를 수정해야하는 문제가 발생함.
   + 언제 SAM 을 사용할까?
-    * 코틀린이 아닌 다른 언어세ㅓ 사용할 클래스를 설계할 
+    * 코틀린이 아닌 다른 언어에서 사용할 클래스를 설계할 때
+  ```kotlin
+  class CalendarView {
+    // java 스타일
+    var listener: Listener? = null
+    interface Listener {
+        fun onDateClicked(date: Date)
+        fun onPageChanged(date: Date)
+    }
+  
+    // kotlin
+    var onDateClicked: ((date: Date) -> Unit)? = null
+    var onPageChanged: ((date: Date) -> Unit)? = null
+  }
+  ```
+  <br></br>
 
-<br></br>
-- 태그 클래스보다는 클래스 계층 사용
+
+- #### Item 39. 태그 클래스보다는 클래스 계층 사용
   ```kotlin
   fun match(value: T?) = when (matcher) {
   
@@ -1131,10 +1146,14 @@
     EQUAL, NOT_EQUAL, LIST_EMPTY, LIST_NOT_EMPTY
   }
   ```
-  + sealed 클래스를 + abstract 사용하여 구현 
+  + sealed 클래스를 사용하여 서브클래스 정의를 제한 함
+    * abstract 사용하여 구현
+  + sealed 한정자
+    * 외부에서 추가적인 서브 클래스를 만들 수 없으므로 else 구문이 필요없음
   + 태그 클래스와 상태 패턴의 차이
+  <br></br>
 
-<br></br>
+
 - equals 규악을 지켜라
   + Any 에는 equals, hashCode, toString 메서드들이 잘 설정된 규약을 가지고 있음
   + 동등성
