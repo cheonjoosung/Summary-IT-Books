@@ -1180,7 +1180,7 @@
     <br></br>
     
 
-- hashCode 규악을 지켜라
+- #### Item 41. hashCode 규악을 지켜라
   + 해시 테이블
     * 해쉬 테이블은 각 요소에 숫자를 할당하는 해시 함수가 필요
     * 같은 요소라면 같은 숫자 리턴
@@ -1223,9 +1223,10 @@
             (acc * 31) + value.hashCode()
     }
     ```
-    
-<br></br>
-- compareTo 규악을 지켜라
+    <br></br>
+
+
+- #### Item 42. compareTo 규악을 지켜라
   + o1.compareTo(o2)
   + 비대칭적 동작, 연속적 동작, 코넥스적 동작
   + compareTo 따로 정의해야 할까?
@@ -1238,8 +1239,10 @@
     * 비교를 자주 사용한다면 class 안에 companion object 안에 넣어서 사용
   + compareTo 구현
     * 리시버 = other 0, 리시비 > other 양수, 리시버 < other 음수
+    * 톱 레벨 함수로 compareValues() 단순하게 값 비교시, compareValuesBy() 더 많은 값을 비교하거나 선택기 활용 시
+  <br></br>
+  
 
-<br></br>
 - API의 필수적이지 않는 부분을 확장 함수로 추출하라
   + 함수 내에 멤버 메소드를 -> 외부로 꺼내어 사용
     * 확장 함수는 다른 패키지에 있을 확률이 높음 (데이터 & 행위를 분리하도록 설계한 프로젝트)
