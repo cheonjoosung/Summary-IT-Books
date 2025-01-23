@@ -1296,7 +1296,7 @@
     <br></br>
     
 
-- 함수 타입 파라미터를 갖는 함수에 inline 한정자를 붙여라
+- #### Item 46. 함수 타입 파라미터를 갖는 함수에 inline 한정자를 붙여라
   + 고차함수를 살펴보면 inline 키워드가 많이 붙어있다 ?
   ```kotlin
   inline fun repeat(times: Int, action: (Int) -> Unit) {
@@ -1311,19 +1311,30 @@
   + 타입 아규먼트를 reified 사용할 수 있다
     * 자바 구버전에는 제네릭이 없음
     * 타입 파라미터를 사용한 부분이 타입 아규먼트로 대체. List<Int> 로 사용할 시 List<*> 는 가능한데 List<Int> 는 불가?
+    ```kotlin
+    inlinfe fun <reified T> printTypeName() {
+        print(T::class.simpleName)
+    }
+    
+    // 사용 
+    printTypeName<Int>() // Int
+    printType mName<String>() // String
+    ```
   + 함수 타입 파라미터를 가진 함수가 훨씬 빠르게 동작
     * 함수 호출 & 리턴을 하는 점프&백스텝 과정이 빠지기에.. 그래서 표준 라이브러리에 간단한 함수둘은 대부분
     inline 한정자가 붙음 
     * Function(N)<Types> () 파라미터 갯수, 뒤에는 파라미터 타입, 리턴 타입 모두
+    * filter, sumBy 의 메소드들이 inline 으로 되어있기에 빠름
   + 비지역적인 리턴(non-local return) 사용가능 
   + inline 한정자의 비용
     * 재귀적으로 동작할 수 없음.
-    * private & internal 가시성을 가진 함수와 프로퍼티 사용 불가
+    * private & internal 가시성을 가진 함수와 프로퍼티 사용 불가하기에 클래스에서 사용되지 않음
   + crossinline & noinline
     * crossinline - 아규먼트로 인라인 함수를 받지만 비지역적 리턴을 하는 함수를 받을 수 없음
     * noinline - 아규먼트로 인라인 함수를 받을 수 없음
+    <br></br>
+  
 
-<br></br>
 - 인라인 클래스의 사용을 고려하라
   + 타입만 맞는다면 곧바로 값을 집어넣을 수도 있음
   + 모든 메서드는 정적 메서드로 만들어짐
