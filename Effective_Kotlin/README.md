@@ -1377,52 +1377,59 @@
     
 
 ### 3-2. 효율적인 컬렉션 처리
-- 하나 이상의 처리 단계를 가진 경우에는 시퀀스를 사용하라
+- #### Item 49. 하나 이상의 처리 단계를 가진 경우에는 시퀀스를 사용하라
   + Iterable 과 Sequence 의 차이
     * 다른 목적으로 설계되어 있음, Sequence 지연(lazy) 처리, 시퀀스 처리
-  함수들을 사용하면, 데코레이터 패턴으로 꾸며진 새로운 시퀀스가 리턴하고 최종에만 계산
+    * 함수들을 사용하면, 데코레이터 패턴으로 꾸며진 새로운 시퀀스가 리턴하고 최종에만 계산
     * 반면 Iterable 은 함수를 사용할 떄 마다 연산이 이루어져 List 만들어짐
     * 자연스로운 처리 순서 유지, 최소한의 연산,무한 시퀀스 형태, 각 단계에서 컬렉션을 만들어 내지 않음
-    * 순서의 중요성
-      - element-by-element order 또는 lazy order 로 요소 하나하나에 저정한 연산
-      - filter -> map -> forEach 출력을 할 때 1,2,3을 다 처리하고 넘기는게 아니라 1에 대한 연산을
+  + 순서의 중요성
+    * element-by-element order 또는 lazy order 로 요소 하나하나에 저정한 연산
+    * filter -> map -> forEach 출력을 할 때 1,2,3을 다 처리하고 넘기는게 아니라 1에 대한 연산을
   다하고 2에 대한 연산을 하고 3에 대한 연산을 함
-    * 최소 연산
-      - filter -> map -> find 일 때 
-      - 중간 처리 단계를 모든 요소에 적용할 필요가 없는 경우 시퀀스 사용
-    * 무한 시퀀스
-      - generateSequence or sequence 사용
-      - take(10) 10개만 추출
-    * 각각의 단게에서 컬렉션을 만들어 내지 않음
-      - 콜렉션이 무거울 때 성능 및 메모리 낭비가 커짐 (ex readLine List<String>) outOfMemory 발생할 수 있음
-      - readLines 보다는 useLines 사용이 필요
-    * 시퀀스가 빠르지 않은 경우
-      - sorted() 는 Sequence 를 List 로 변환한 뒤 자바의 sort 를 사용해 처리
-      - 시퀀스에서 sorted() 를 빼는게 좋음
-    * 자바 스트림의 경우
-      - lazy 하게 동작하며 마지막 처리 단계에서 연산이 일어남
-    * 코틀린 시퀀스 디버깅
-      - 플러그인 Kotlin Sequence Debugger
-- 컬렉션 처리 단계 수를 제한하라
+  + 최소 연산
+    * filter -> map -> find 일 때 
+    * 중간 처리 단계를 모든 요소에 적용할 필요가 없는 경우 시퀀스 사용
+  + 무한 시퀀스
+    * generateSequence or sequence 사용
+    * take(10) 10개만 추출
+  + 각각의 단게에서 컬렉션을 만들어 내지 않음
+    * 콜렉션이 무거울 때 성능 및 메모리 낭비가 커짐 (ex readLine List<String>) outOfMemory 발생할 수 있음
+    * readLines 보다는 useLines 사용이 필요
+  + 시퀀스가 빠르지 않은 경우
+    * sorted() 는 Sequence 를 List 로 변환한 뒤 자바의 sort 를 사용해 처리
+    * 시퀀스에서 sorted() 를 빼는게 좋음
+  + 자바 스트림의 경우
+    * lazy 하게 동작하며 마지막 처리 단계에서 연산이 일어남
+  + 코틀린 시퀀스 디버깅
+    * 플러그인 Kotlin Sequence Debugger
+  <br></br>
+
+
+- #### Item 50. 컬렉션 처리 단계 수를 제한하라
   + filter -> map 보다는 filterNotNull() 이 더 좋음
-  + 성능이 중요한 부분에는 기본 자료형 배열 사용
-    * Int, IntArray 보다 List<Int> 가 5배 메모리 더 할당함
-- mutable 컬렉션 사용을 고려하라
+  ```kotlin
+  list.map {it.name}
+        .filter {it != null}
+        .map { it!! }
+  
+  list.map {it.name}
+        .filterNotNull()
+  
+  list.mapNotNull {it.name}
+  ```
+    * 각 단계마다 컬렉션 만들기에 성능이 떨어짐
+  <br></br>
+  
+  
+- #### Item 51. 성능이 중요한 부분에는 기본 자료형 배열 사용
+  * Int, IntArray 보다 List<Int> 가 5배 메모리 더 할당함
+    * 가볍고 값 접근 시 추가 비용이 들어가지 않기에 빠름
+  <br></br>
+  
+
+- #### Item 52. mutable 컬렉션 사용을 고려하라
   + immutable 은 연산 시 복제가 발생하는데 비용이 많이 발생 함
   + 안정성은 immutable 콜렉션이 좋지만 성능적인 부분은 mutable 임
   + utils 또는 지역스코프 등 요소 삽입 자주 발생할 때?
-
-- 용어
-  + 함수
-    * 톱레벨, 클래스 멤버 함수, 함수 내부의 지역 함수
-  + 메서드
-    * 클래스와 연결된 함수
-    * 이를 호출하기 위해서는 인스턴스가 필요
-  + 멤버
-    * 클래스 내부에 정의된 요소
-  + 확장
-    * 이미 존재하는 클래스에 추가하는 가짜 멤버
-  + 파라미터
-    * 함수 선언에 정의되어 있는 변수
-  + 아규먼트
-    * 함수로 전달되는 실질적인 값
+  <br></br>
