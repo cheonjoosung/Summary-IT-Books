@@ -89,3 +89,51 @@ fun onCreateAsync() {
 - suspend 제어자를 추가하는 것으로 충분하며 쉽게 구현 가능
 - 스레드보다 비용이 작음
 
+
+## 2장 시퀀스 빌더
+### 개요
+- 코틀린의 시퀀스는 List or Set 과 같은 컬렉션이랑 비슷한 개념이지만 필요할 때마다 값을 하났기 계산하는 지연 처리
+- 특징
+  + 요구되는 연산 최소한 수행
+  + 무한정
+  + 메모리 사용 효율적
+```kotlin
+fun main() {
+    for (num in seq) {
+        println("number is $num")
+    }
+}
+
+val seq = {
+  yield(1)
+  yield(2)
+  yield(3)
+}
+```
+- 작동방식
+  + 첫 번째 수 요청 시 빌더 내부 진입
+  + 작업이 끝나면 중단된 지점에서 다시 실행 됨 
+  + main 함수와 제너레이터가 번갈아가면서 실행
+  + 코루틴으로 동작하며 쓰레드 사용보다 효율적임 (비용)
+
+### 실제 사용 예
+- 피보나치 수열
+  ```kotlin
+  val fibonacci: Sequence<BigInteger> = sequence {
+    var first = 0.toBigInteger()
+    var second = 1.toBigInteger()
+  
+    while(true) {
+        yield(first)
+        val temp = first
+        first += second
+        second = temp  
+    }
+  }
+  
+  fun main() {
+    print(fibonacci.take(10).toList())
+  }
+  ```
+- 시퀀스 빌더는 중단 함수가 아니라 반환(yield)를 사용해야 함
+- 중단 함수를 사용하고 싶은 경우 플로우 사용
