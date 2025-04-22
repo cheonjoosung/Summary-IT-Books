@@ -137,3 +137,41 @@ val seq = {
   ```
 - 시퀀스 빌더는 중단 함수가 아니라 반환(yield)를 사용해야 함
 - 중단 함수를 사용하고 싶은 경우 플로우 사용
+
+
+## 3장 중단은 어떻게 동작할까?
+### 재개
+- 코루틴에서 중단가능한 함수 키워드로 suspend 사용
+  ```kotlin
+  suspend fun main() {
+    println("before")
+  
+    suspendCoroutine<Unit> { }
+  
+    println("after")
+  }
+  ```
+- 위 코드 실행 시 before 까지 출력된 상태로 유지 됨
+  + after 를 출력하고 싶을 때 코루틴 코드 블록 안에서 resume 을 호출해서 복귀해야 함
+- delay vs thread.sleep
+  + delay 는 코루틴 내에서 동작 & 비동기(지연시간 동안 다른 작업 가능) & 코루틴을 정지하며 쓰레드를 차지하지 않음
+  + thread.sleep 은 쓰레드를 차지 & 쓰레드를 중지
+  
+### 값으로 재개하기
+- resume 함수에 Unit 을 전달할까?
+  + 제너릭으로 된 기본타입이며 원하는 타입을 넣으면 그 값으로 리턴해야 함
+  ```kotlin
+  val i: Int = suspendCoroutine<Int> { cont: Continuation<Unit> -> 
+    cont.resume(42)
+  }
+  println(i) // 42
+  ```
+  + 네트워크 상황에서 데이터를 요청하고 기다릴 때 사용하며 쓰레드에 비해 비용을 덜 씀. 안드로이드와 같은 메인 쓰레드 시스템에서는 엄청난 장점이 존재
+  
+
+### 예외로 재개하기
+- 값 대신 exception 이 발생한 경우 예외를 던집니다
+  + 호출한 곳에서 .isSuccessful 체크 또는 sealed 를 사용해서 처리
+
+### 함수가 아닌 코루틴을 중단시킨다
+- 탑 클래스 변수로 코루틴을 선언해두고 코드 내에 호출하는 것은 의미가 없음
