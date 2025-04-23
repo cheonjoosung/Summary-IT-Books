@@ -175,3 +175,210 @@ val seq = {
 
 ### 함수가 아닌 코루틴을 중단시킨다
 - 탑 클래스 변수로 코루틴을 선언해두고 코드 내에 호출하는 것은 의미가 없음
+
+
+## 4장 코루틴의 실제 구현
+### 개요
+- 중단 함수(suspend) 함수가 시작/중단 될 때 상ㅌ내를 가진다
+- continuation 객체는 상태를 나타내는 숫자와 로컬 데이터를 가짐
+  + 실행 재개 또는 완료 시 사용된느 콜 스택으로 사용
+  + 비동기 흐름 제어용 콜백 핸들러이자 코루틴의 상태 저장
+  ```kotlin
+  suspend fun greet(): String {
+    delay(1000)
+    return "Hello"
+  }
+  
+  fun greet(continuation: Continuation<String>): Any {
+    // delay 이후 결과를 받아 다시 continuation.resumeWith(Result.success("Hello")) 호출
+  }
+  ```
+  
+### 컨티뉴에이션 전달 방식
+- 중단 함수가 불리면 자동으로 continuation 객체가 생성 됨
+  + 샘플
+  ```kotlin
+  interface Continuation<in T> {
+    val context: CoroutineContext
+    fun resumeWith(result: Result<T>)
+  }
+  
+  suspend fun getUser(): User?
+  fun getUser(continuation: Continuation<*>): Any? // 중단함수 내부 변형
+  ```
+  
+### 아주 간단함 함수
+- 지연함수를 통해 알아보기
+  ```kotlin
+  suspend fun myFunction() {
+    println("before")
+    delay(1000L)
+    println("after")
+  }  
+  
+  // 위 코드는 아래의 형태로 변환
+  fun myFunction(continuation: Continuation<Unit>): Any {
+    // 컴파일러가 생성한 상태 저장용 continuation 구현체
+    val cont: MyFunctionContinuation = 
+        if (continuation is MyFunctionContinuation) continuation
+        else MyFunctionContinuation(continuation)
+
+    when (cont.label) {
+        0 -> {
+            println("before")
+            cont.label = 1
+            // suspend point - delay 함수 호출, 중단
+            return delay(1000L, cont)
+        }
+        1 -> {
+            // delay 가 끝난 뒤 resume 됐을 때 실행
+            println("after")
+            return Unit
+        }
+    }
+  }
+  
+  class MyFunctionContinuation(
+      val completion: Continuation<Unit>
+  ) : ContinuationImpl(completion) {
+    var label = 0
+    override fun invokeSuspend(result: Any): Any {
+        return myFunction(this) // 상태 머신을 다시 호출하여 다음 단계 실행
+    }
+  }
+
+  ```
+  + continuation 의 상태(lable) 에 따라 before 이 출력되고 1초 지연 후 상태가 바뀌면 after 가 출력
+  + delay(1000L, cont) 를 리턴시켜 재개될 시점을 알려줌
+
+### 상태를 가진 함수
+- counter 를 변화 시키는 함수가 있다고 가정
+  ```kotlin
+  suspend fun myFunction() {
+    println("before")
+    var count = 0
+    delay(1000L)
+    count++
+    println("count=$count")
+    println("after")
+  }
+  
+  fun myFunction(continuation: Continuation<Unit>): Any {
+    val cont: MyFunctionContinuation =
+        if (continuation is MyFunctionContinuation) continuation
+        else MyFunctionContinuation(continuation)
+
+    var count = cont.count
+
+    when (cont.label) {
+        0 -> {
+            println("before")
+            count = 0
+            cont.count = count
+            cont.label = 1
+            return delay(1000L, cont)
+        }
+
+        1 -> {
+            count = cont.count
+            count++
+            cont.count = count
+            println("count=$count")
+            println("after")
+            return Unit
+        }
+
+        else -> throw IllegalStateException("Invalid coroutine label")
+    }
+  }
+  
+  class MyFunctionContinuation(
+  val completion: Continuation<Unit>
+  ) : ContinuationImpl(completion) {
+  var label = 0           // 현재 상태 추적
+  var count = 0           // 지역 변수 count 저장
+  
+      override fun invokeSuspend(result: Any): Any {
+          return myFunction(this)
+      }
+  }
+  ```
+  + continuation 객체가 상태와 지역 변수(count 저장) 을 가짐
+
+### 값을 받아 재개되는 함수
+- 중단 함수로부터 값을 받아야 하는 경우 더 복잡해짐
+  ```kotlin
+  suspend fun printUser(token: String) {
+    println("before")
+    val userId = getUserId(token) //중단함수
+    println("Got userId: $userId")
+    val userName = getUserName(userId, token) //중단함수
+    println("Got userName: $userName")
+    println("after")
+  }
+  
+  // w
+  fun printUser(token: String, continuation: Continuation<Unit>): Any {
+    val cont: PrintUserContinuation =
+        if (continuation is PrintUserContinuation) continuation
+        else PrintUserContinuation(continuation)
+
+    var userId: String
+    var userName: String
+
+    when (cont.label) {
+        0 -> {
+            println("before")
+            cont.token = token
+            cont.label = 1
+            return getUserId(token, cont)
+        }
+
+        1 -> {
+            userId = cont.result as String
+            println("Got userId: $userId")
+            cont.userId = userId
+            cont.label = 2
+            return getUserName(userId, cont.token, cont)
+        }
+
+        2 -> {
+            userName = cont.result as String
+            println("Got userName: $userName")
+            println("after")
+            return Unit
+        }
+
+        else -> throw IllegalStateException("Invalid state")
+    }
+  }
+
+  class PrintUserContinuation(
+      completion: Continuation<Unit>
+  ) : ContinuationImpl(completion) {
+  
+      var label = 0
+      lateinit var token: String
+      lateinit var userId: String
+      lateinit var result: Any
+  
+      override fun invokeSuspend(result: Any): Any {
+          this.result = result
+          return printUser(token, this)
+      }
+  }
+  ```
+  + token 상태 0과 1에서 사용
+  + userId 상태 1과 2에서 사용
+  + Result 타입인 result 함수가 어떻게 재개되었는지 나타냄
+
+### 콜 스택
+- 함수 a -> b 호출 시 b가 종료되면 실행이 될 지점을 어딘가 저장해야 하는데 이를 콜 스택이라는 자료 구조에 저장
+
+### 실제코드
+- 예외 발생 시 더 나은 스택 트레이스 생성
+- 코루틴 중단 인터셉션
+- 사용하지 않는 변수 제거하거나 테일콜 최적화 등 포함
+
+### 중단함수 성능
+- 비용이 크지 않으며 컨티뉴에이션 객체에 상태를 저장하는 것 또한 간단
