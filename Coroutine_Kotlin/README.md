@@ -397,4 +397,85 @@ val seq = {
     * kotlinx.coroutines
     * launch, async, Deferred 처럼 다양한 기능 제공
     * 직접 사용하기 편리하게 설계
-    * 단 하나의 명확한 동시성 스타일을 위해 설계 
+    * 단 하나의 명확한 동시성 스타일을 위해 설계
+
+## 6장 코루틴 빌더
+- 개요
+  + 모든 중단 함수는 또 다른 중단 함수에 의해 호출되고 일반 함수는 호출 불가
+  + 중단 함수 연속 호출 시작 지점이 있는데 이를 코루틴 빌더가 역할 함
+    * launch
+    * runBlocking
+    * async
+
+### launch 빌더
+- 작동방식은 thread 를 호출하여 새로운 스레드를 시작하는 것과 유사
+  ```kotlin
+  fun main() {
+    GlobalScope.launch {
+        delay(1000L)
+        println("World!!")
+    }
+  
+    Thread.sleep(2000L)
+  }
+  ```
+  + launch 함수는 CoroutineScope 인터페이스의 확장 함수
+  + CoroutineScope 인터페이스의 부모 코루틴과 자식 코루틴 사의 관계 정리하긴 위한 목적으로 사용되는 구조화된 동시성의 핵심
+  + 쓰레드를 호출하는 이유는 코루틴 실행하자마자 끝나므로 대기시간을 위해 설정
+
+### runBlocking 빌더
+- 중단 메인 함수와 마찬가지로 시작한 스레드를 중단 시킵니다 (새로운 코루틴을 실행한 뒤 완료될 때까지 현재 스레드를 중단 가능한 상태로 블로킹)
+  ```kotlin
+  fun main() {
+    runBlocking {
+        delay(1000L)
+        println("World")
+    }
+  }
+  ```
+  + delay(1000L) 은 Thread.sleep(1000L) 와 비슷하게 동작함 
+  + 프로그램 끝나는 걸 방지하기 위해 스레드 블로킹할 필요가 있는 경우
+  + 현재는 거의 사용되지 않음
+
+### async 빌더
+- launch 와 비슷하지만 값을 생성하도록 설계
+- Deferred<T> 타입 객체를 리턴하며 T는 생성되는 값의 타입
+- 값을 반환하는 중단 메서드인 await 이 있음
+  ```kotlin
+  fun main() = runBlocking {
+    val res1 = GlobalScope.async {
+        delay(1000L)
+        "Text1"
+    }
+  }
+  ```
+  + launch 와 비슷하지만 async 는 값을 반환한다는 특징이 있음
+  + 병렬로 작업을 실행시킬 때 유용
+
+### 구조화된 동시성
+- GlobalScope 에서 시작되었다면 프로그램은 해당 코루틴을 기다리지 않음
+- launch or async 가 CoroutineScope 의 확장 함수
+  + runBlocking 정의에 block 파라미터가 리시버 타입이 CoroutineScope 함수형 타입
+  + 굳이 GlobalScope 사용하지 않고 runBlocking 에서 this 를 이용해서 launch or async 사용 가능
+  ```kotlin
+  fun main() = runBlocking {
+    this.launch {
+        delay(1000L)
+        println("World!")
+    }
+  }
+  ```
+  + 부모는 자식들을 위한 스코프를 제공하고 자식들을 해당 스코프 내에서 호출합니다 이를 통해 구조화된 동시성 관계 성립
+    * 자식은 부모로부터 컨텍스트 상속
+    * 부모는 모든 자식이 작업을 마칠 떄까지 기다림
+    * 부모 코루틴이 취소되면 자식 코루틴도 취소
+    * 자식 코루틴 에러 발생 시 부모 코루틴 또한 에러로 소멸
+
+### 현업에서의 코루틴
+- 안드로이드 내에서는 scope 사용
+
+### coroutineScope 사용
+- 중단 함수 내에서 coroutineScope 사용
+- 람다 표현식이 필요로 하는 스코프 만들어 주는 중단 함수
+- coroutineScope 로 함수를 래핑한 다음 스코프 내에서 빌더를 사용
+- 프로젝트 내에서 스코프가 정의되면 변경될 일이 거의 없음 ?
