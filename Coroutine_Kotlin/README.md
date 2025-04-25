@@ -479,3 +479,100 @@ val seq = {
 - 람다 표현식이 필요로 하는 스코프 만들어 주는 중단 함수
 - coroutineScope 로 함수를 래핑한 다음 스코프 내에서 빌더를 사용
 - 프로젝트 내에서 스코프가 정의되면 변경될 일이 거의 없음 ?
+
+
+## 7장 코루틴 컨텍스트
+- 개요
+  + 코루틴 빌더에 보면 첫번째 파라미터가 코루틴 컨텍스트
+  + 마지막 인자는 코루틴 스코프
+    ```kotlin
+    public interface CoroutineScope {
+        public val coroutineContext: CoroutineContext 
+    }
+    ```
+    * CoroutineContext 를 감싸는 래퍼처롬 보임 (Continuation 유사)
+
+### CoroutineContext 인터페이스
+- 원소나 원소들의 집합을 나타내는 인터페이스
+  + Job, CoroutineName, CoroutineDispatcher 와 같은 Element 객체들이 인덱싱 된 집합
+  + CoroutineContext 모든 원소는 CoroutineContext 되어있어서 직관적임
+  + 연산자 + 로 쉽게 결합이 가능 
+    ```kotlin
+    val ctx = Dispatchers.IO + Job() + CoroutineName("MyCoroutine")
+    ```
+
+### CoroutineContext 에서 원소 찾기
+- 컬렉션과 유사하기에 get 이용해 키를 가진 원소 찾을 수 있음
+  ```kotlin
+  fun main() {
+    val ctx: CoroutineContext = CoroutineName("A Name")
+    val coroutineName: CoroutineName? = ctx[CoroutineName]
+  
+    println(coroutineName?.name) // A Name
+    val job: Job? = ctx[Job] // ctx.get(Job)
+    printlnO(job) // null
+  }
+  ```
+  + CoroutineName 은 Companion 객체로 되어있음
+
+
+### CoroutineContext 더하기
+- 두 개의 코루틴 컨텍스트를 합쳐서 하나의 컨텍스트로 만들 수 있음
+  + 합쳐진 경우 두 가지 키를 모두 가짐
+  + 같은 키를 가진 또 다른 원소가 더해지면 맵처럼 새로운 원소가 기존 원소를 대체합니다.
+
+### 비어있는 코루틴 컨텍스트
+- CoroutineContext 컬렉션이므로 빈 컨텍스트 또한 만들 수 있음
+  + 비어잇는 경우 다른 컨텍스트 더해도 변하지 않음
+
+### 원소제거
+- 연산자(+)는 오버로딩 했2지만 - 연산자는 오버로딩 하지 않음
+- minusKey 메소드를 사용해야 함
+
+### 컨텍스트 폴딩
+- fold 사용 조건
+  + 누산기의 첫 번쨰 값
+  + 누산기의 현재 상태와 현재 실행되고 있는 원소로 누산기의 다음 상태를 계산할 연산
+  ```kotlin
+  fun main() {
+    val ctx = CoroutineName("Name") + Job
+    ctx.fold("") { acc, element -> "$acc$element"}
+        .also(::println)
+  }
+  ```
+
+### 코루틴 컨텍스트와 빌더
+- CoroutineContext 코루틴의 데이터를 저장하고 전달하는 방법
+  ```kotlin
+  fun CoroutineScope.log(msg: String) {
+    val name = coroutineContext[CoroutineName]?.name
+  println("[$name] $msg")
+  }
+  
+  fun main() = runBlocking(CoroutineName("main")) {
+    log("Started")
+    
+    val v1 = async {
+        delay(500L)
+        log("Running async")
+        42
+    }
+  
+    launch {
+        delay(1000L)
+        log("Running launch")
+    }
+  
+    log("The answer is ${v1.await()}")
+  }
+  ```
+  + 코루틴 컨텍스트 계산 공식
+    * defaultContext + parentContext + childContext
+    * 새로운 원소가 같은 키를 이전 원소를 대체 자식의 컨텍스트는 부모로부터 상속받은 컨텍스트 중 같은 키를 가진 원소로 대체
+
+### 중단 함수에서 컨텍스트에 접근하기
+- CoroutineScope 는 컨텍스트 접근할 때 사용하는 coroutineContext 접근
+
+### 컨텍스트를 개별적으로 생성하기
+- 코루틴 컨텍스트를 커스텀하게 만드는 경우는 흔치 않음
+  + CoroutineContext.Element 인터페이스를 구현하는 클래스 만들기
