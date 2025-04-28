@@ -576,3 +576,87 @@ val seq = {
 ### 컨텍스트를 개별적으로 생성하기
 - 코루틴 컨텍스트를 커스텀하게 만드는 경우는 흔치 않음
   + CoroutineContext.Element 인터페이스를 구현하는 클래스 만들기
+
+
+## 8장 잡과 자식 코루틴 기다리기
+- 개요
+  + Job 은 코루틴 취소, 상태 파악 등 다양하게 사용 가능
+
+### Job 이란 무엇인가?
+- Job 은 수명을 가지고 있으면 취소가능함
+- 인터페이스긴 하지만 구체적인 사용법과 상태를 가지고 있다는 점에서 추상클래스 처럼 다룰 수 있음
+- 상태변화
+  + New -> Active -> Completing -> Completed
+  + Active/Completing -> Cancelling -> Canceled
+  + 대부분의 코루틴은 Active 에서 시작하고 지연 코루틴만 New 상태에서 실행
+  + isActive, isCompleted, isCancelled 프로퍼티 사용 가능
+
+### 코루틴 빌더는 부모의 잡을 기초로 자신들의 잡을 생성한다
+- launch 반환 타입은 job
+  ```kotlin
+  fun main(): Unit = runBlocking {
+    val job: Job = launch {
+        delay(1000L)
+        println("test")
+    }
+  }
+  ```
+- async 함수 반환 타입은 job
+  ```kotlin
+  fun main(): Unit = runBlocking {
+    val deferred: Deferred<String> = async {
+        delay(1000L)
+        "test"
+    }
+    val job: Job = deferred
+  }
+  ```
+- Job 은 코루틴에서 상송하지 않는 유일한 코루틴 컨텍스트이며 이는 코루틴에서 중요한 법칙
+- 모든 코루틴은 자신만의 Job을 생성하며 인자 또는 부모 코루틴으로부터 온 잡은 새로운 잡의 부모로 사용
+  ```kotlin
+  fun main(): Unit = runBlocking {
+    val name = CoroutineName("Some name")
+    val job = Job()
+  
+    launch(name + job) {
+        val childName = coroutinecontext[CoroutineName]
+        println(childName == name) // true
+        val childJob = coroutineContext[Job]
+        println(childJob == job) // false
+        println(childJob == job.children.first()) // true
+    }
+  
+  }
+  ```
+  
+### 자식들 기다리기
+- join()
+  + 지정한 잡이 Completed or Canceled 될 때 까지 중단하는 함수
+
+### 잡 팩토리 함수 
+- job 은 Job() 팩토리 함수 사용 시 코루틴 없이 Job 만들 수 있음
+  + 어떤 코루틴과도 연관되지 않으며
+  + 컨텍스트로 사용될 수 있음
+  + 한 개 이상의 자식 코루틴을 가진 부모 잡으로 사용할 수도 있음
+  ```kotlin
+  suspend fun main(): Unit = runBlocking {
+    val job = Job()
+    launch(job) { // 새로운 잡이 부모로부터 상속받은 ㅈ밥을 대체
+        delay(1000L)
+        println("Text 1")
+    }
+  
+    launch(job) { // 새로운 잡이 부모로부터 상속받은 ㅈ밥을 대체
+        delay(2000L)
+        println("Text 2")
+    }
+  
+    // job.join() 이렇게 쓰면 영원히 대기함
+    job.children.forEach { it.join() }
+  }
+  ```
+  + 생성자처럼 보이지만 인터페이스라 가짜 생성자임
+  + 하위인터페이스인 CompletableJob 이 반환
+    * 2가지 메소드를 추가하여 기능성 확장
+    * complete(): Boolean 잡 완료하는데 사용
+    * completeExceptionally(exception: Throwable): Boolean 인자로 받은 예외로 잡을 완료하는데 사용
