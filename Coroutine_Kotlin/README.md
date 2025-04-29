@@ -660,3 +660,78 @@ val seq = {
     * 2가지 메소드를 추가하여 기능성 확장
     * complete(): Boolean 잡 완료하는데 사용
     * completeExceptionally(exception: Throwable): Boolean 인자로 받은 예외로 잡을 완료하는데 사용
+
+
+## 9장 취소
+- 개요
+  + 중단 함수 사용하는 몇몇 클래스와 라이브러리는 취소 기능 반드시 제공
+  
+### 기본적인 취소
+- Job 인터페이스 취소하게 하는 cancel 메서드 가짐
+  + 호출한 코루틴 첫 번째 중단점에서 잡을 끝냄
+  + 잡이 자식을 가지면 그ㄷ들 또한 취소 되나 부모는 영향을 받지 않음
+  + 잡이 취소되면 취소된 잡은 새로운 코루틴의 부모로 사용될 수 없습니다. 취소된 잡은 Cancelling 상태가 되었다가 Cancelled 상태로 바뀜
+  ```kotlin
+  suspend fun main(): Unit = coroutineScope {
+    val job = launch {
+        repeat(1000) { i ->
+            delay(200)
+            println("Printing $i")
+        } 
+    }
+  
+    delay(1100)
+    job.cancel()
+    job.join()
+    println("Cancelled successfully")
+  }
+  // Printing 0
+  // Printing 1
+  // Printing 2
+  // Printing 3
+  // Printing 4
+  // Cancelled successfully
+  ```
+  + cancel -> join 을 호출해서 기존의 작업을 기다려야 함
+  ```kotlin
+  public suspend fun Job.cancelAndJoin() {
+    cancel()
+    return join()
+  }
+  ```
+
+### 취소는 어떻게 동작하는가?
+- 잡이 취소되면 Cancelling 상태로 바뀝니다. 상태가 바뀐 뒤 첫 번째 중단점에서 CancellationException 예외를 던집니다
+  + try-catch 구문을 사용하여 잡을 수도 있지만 다시 던지는 것이 좋습니다.
+
+### 취소 중 코루틴을 한 번 더 호출하기
+- Job은 이미 Cancelling 상태가 되면 중단되거나 다른 코루틴을 시작하는 건 절대 불가능
+- 반드시 호출해야 하는 케이스는 DB롤백 하는 경우 : withContext(NonCancellable)
+  + withContext 내부에서는 취소될 수 없는 Job인 NonCancellable 객체를 사용
+  + 블록 내부에서 잡은 앩티브 상태를 유지하며 중단 함수를 원하는 만큼 호출
+
+### invokeOnCompletion
+- 자원 해제하는 데 자주 사용되는 또 다른 방법은 Job의 invokeOnCompletion 메소드를 호출
+- invokeOnCompletion 메서드는 잡이 Completed or Cancelled 와 같은 마지막 상태에 도달했을 때 호출된 핸들러를 지정하는 역할
+  ```kotlin
+  suspend fun main(): Unit = coroutineScope {
+    val job = launch {
+        delay(1000)
+    }
+    job.invokeOnCompletion { exception: Throwable? -> 
+        println("Finished")
+    }
+    delay(400)
+    job.cancelAndJoin()
+  }
+  ```
+  + 잡이 예외 없이 끝나면 null
+  + 코루틴 취소되었으면 CancellationException 이 됨
+  + 코루틴을 종료시킨 예외일 수 있습니다
+
+### 중단될 수 없는 걸 중단하기
+- 취소는 중단점에서 일어남
+- Thread.sleep() 을 절대 사용하지 않는 것이 좋음
+
+### suspendCancellableCoroutine
+- CancellableContinuation<T> 로 래핑
