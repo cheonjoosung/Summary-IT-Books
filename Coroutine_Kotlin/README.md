@@ -735,3 +735,40 @@ val seq = {
 
 ### suspendCancellableCoroutine
 - CancellableContinuation<T> 로 래핑
+
+## 10장 예외 처리
+- 개요
+  + 스레드의 경우도 예기치 않은 에러가 발생한 경우 종료 함
+  + 코루틴 빌더는 부모도 종료시키며 취소된 부모는 자식들 모두를 취소시킨다는 점이 스레드와 다름
+  + 예외는 자식 -> 부모로 가며 다시 부모 -> 자식으로 쌍방 전파하는 구조
+
+### 코루틴 종료 멈추기
+- 코루틴 내에서 try-catch 는 아무런 도움이 되지 않음
+- SupervisorJob
+  + 해당 키워드를 사용하면 자식에서 발생한 모든 예외룰 무시할 수 있음
+  + 부모 코루틴의 인자로 사용하게 되면 쓰지않는 것과 동일하므로 주의가 필요함
+- supervisorScope
+  + 부모와의 연결은 유지되지만 부모에게 예외를 전파하지 않음
+  + 중단 함수 본체를 래핑
+  + 서로 무관한 다수의 작업을 해당 스코프내에서 실행을 주로 함
+- coroutineScope
+  + try-catch 로 던지는 예외를 잡을 수 있음
+
+## await
+- launch 처럼 부모 코루틴을 종료하고 부모와 관련있는 코루틴 빌더도 종료시킴
+- 그러나 supervisorScope 와 같이 사용하면 해당 코루틴빌더만 종료되고 나머지는 그대로 실행 됨
+
+## CancellationException은 부모까지 전파되지 않는다
+- 해당 클래스의 서브 클래스라면 부모로 전파되지 않고 현재 코루틴을 취소시킴
+- open Class 로 다른 클래스나 객체로 확장 가능
+
+## 코루틴 예외 핸들
+- 예외를 다룰 때 예외를 처리하는 기본 행동을 정의하는 것이 유용할 때가 있음
+- coroutineExceptionHandler 컨텍스트를 사용하면 편리함
+  ```kotlin
+  fun main(): Unit = runBlocking {
+    val handler = CoroutineExceptionHandler { ctx, exception ->
+        println("Caught $exception")
+    } 
+  }
+  ```
