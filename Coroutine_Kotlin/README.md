@@ -772,3 +772,127 @@ val seq = {
     } 
   }
   ```
+
+
+## 11장 코루틴 스코프 함수
+### 코루틴 스코프 함수가 소개되기 전에 사용한 방법들
+  ```kotlin
+  suspend fun getUserProfile(): UserProfileData {
+    val user = getUserData()                // 1초
+    val notifications = getNotifications() // 1초
+  
+    return UserProfielData(user = user, notifications = notifications)
+  }
+  ```
+  + 문제 : 작어빙 동시에 진행되지 않는다는 점(하나의 엔드포인트에서 데이터를 얻는데 1초씩 걸리기 때문에 함수기ㅏ 끝나는 데 2초가 걸림)
+  + 두 개의 중단 함수를 동시에 실행하려면 async 로 래핑필요하고 GlobalScope 사용은 바람직하지 않음
+    * GlobalScope 는 그저 EmptyCoroutineContext 가진 스코프임
+    * 글로벌 스코프로 aysnc 실행 시 부모 코루틴과 아무런 관련이 없어짐
+      + 취소가 불가능해짐
+      + 부모로부터 스코프 상속받지 않음
+      + 메모리 누수발생
+      + 단위 테스트 도구 동작하지 않아 테스크 수행 어려움
+
+### coroutineScope
+- 스코프를 시작하는 중단 함수이며 인자로 들어온 함수가 생성한 값을 반환
+  ```kotlin
+  suspend fun <R> coroutineScope(
+    block: suspend CoroutineScope.() -> R
+  ): R
+  ```
+  + 코루틴 스코프 본체는 리시버 없이 곧바로 호출
+  + 새로운 코루틴을 생성하지만 새로운 코루틴이 끝날 때까지 코루틴 스코프를 호출한 코루틴을 중단하기 때문에 호출한 코루틴 작업을 동시에 시작하지 않음
+  + 생성된 스코프는 바깥의 스코프에서 coroutineContext 를 상속받지만 컨텍스트의 Job을 오버라이딩합니다
+    * 부모가 해야할 책임을 이어받음
+    * 자신의 작업 끝내기 전까지 모든 자식 기다림
+    * 부모 취소시 자식도 취소
+  ```kotlin
+  suspend fun getUserProfile(): UserProfileData = 
+    coroutineScope {
+        val user = async { getUserData() }                // 1초
+        val notifications = async { getNotifications() } // 1초
+  
+        UserProfielData(user = user.await(), notifications = notifications.await())
+    }
+  ```
+  
+### 코루틴 스코프 함수
+- supervisorScope 는 coroutineScope 와 비슷하지만 Job 대신 SupervisorJob 사용
+- withContext 는 커ㅗ루틴 컨텍스트를 바꿀 수 있는 coroutineScope
+- withTimeOut 은 타임아웃이 있는 coroutineScope
+- 스코프 함수
+  + let, with, apply
+- 코루틴 스코프 함수
+  + 스코프 함수와 확연히 구분 
+  + 코루틴 빌더와 혼동되지만 개념적으로 다름
+  ## 📌 코루틴 빌더 vs 코루틴 스코프 함수
+
+| 구분 | 코루틴 빌더 (Coroutine Builders) | 코루틴 스코프 함수 (Coroutine Scope Functions) |
+|------|----------------------------------|---------------------------------------------|
+| **정의** | 코루틴을 **생성**하고 실행하는 함수 | 코루틴이 실행되는 **범위(scope)**를 지정하는 함수 |
+| **대표 함수** | `launch`, `async`, `withContext` | `coroutineScope`, `supervisorScope` |
+| **목적** | 실제로 코루틴을 시작하고 수행함 | 코루틴의 구조와 자식 코루틴의 동작 방식을 관리 |
+| **반환값** | `launch` → Job<br>`async` → Deferred<br>`withContext` → 결과 값 | 결과 값 반환 (suspend 함수) |
+| **컨텍스트 전환 여부** | `withContext`만 컨텍스트 전환<br>나머지는 그대로 실행 | 현재 컨텍스트를 유지하며 새로운 스코프 생성 |
+| **에러 전파** | 기본적으로 부모에게 예외 전파 | `coroutineScope` → 예외 전파<br>`supervisorScope` → 예외 격리 |
+| **사용 예시** | ```kotlin<br>launch { doSomething() }<br>async { getResult() }``` | ```kotlin<br>coroutineScope {<br>   launch { ... }<br>}``` |
+| **기본 특성** | 새 Job을 만들어 실행<br>병렬 작업 가능 | 자식 코루틴들이 모두 끝날 때까지 suspend됨 |
+| **종료 조건** | Job이 cancel되면 중단 | 스코프 내 모든 코루틴 완료 시 반환 |
+
+### withContext
+- coroutineScope 와 비슷하지만 스코프의 컨텍스트를 변경할 수 있다는 점이 다름
+  ```kotlin
+  launch(DIspatchers.Main) {
+    view.showProgressBar()
+    withContext(Dispatchers.IO) {
+        fileRepostiory.saveData(data)
+    }
+    view.hideProgressBar()
+  }
+  ```
+  + Dispatchers 와 주로 쓰임
+  + async 는 스코프를 필요로 하지만 withContext 와 coroutineScope 는 해당 함수를 호출한 중단점에서 스코프 들고옴
+
+### supervisorScope
+- 호출한 스코프로부터 상속받은 coroutineScope를 만들고 지정된 중단 함수를 호출한다는 점에서 coroutineScope 와 비슷
+- 둘의 차이점은 Job을 SupervisorJob 으로 오버라이딩하는 것이기 때문에 자식 코루틴이 예외를 던지더라도 취소되지 않음
+- 서로 독릭적인 작업을 시작하는 함수에서 주로 사용
+- async 로 처리하려면 모든 작업마다 try-catch 문으로 예외를 잡아야 하는 문제가 있음
+
+### withTimeout
+- coroutineScope 와 비슷한 함수
+- 실행할 때 제한시간을 두는것이 다른 점
+- 함수 테스트 시 유용하게 쓰임. 얼마나 오래걸리는지 적게 걸리는지 확인 시
+
+### 코루틴 스코프 함수 연결하기
+- 서로 다른 코루틴 스코프 함수의 두가지 기능이 모두 필요하다면 코루틴 스코프 함수에서 다른 기능을 가지는 코루틴 스코프 함수 호출
+  ```kotlin
+  suspend fun calculateAnswerOrNull(): User? = 
+    withContext(Dispatchers.Default) {
+        withTimeoutOrNull(1000) {
+            calculateAnswer()
+        }
+    }
+  ```
+
+### 추가적인 연산
+- 안드로이드에서 뷰와 상관없는 로직이 있는 경우 launch 보다는 생성자 주입을 통해 전달해줘서 기다리지말고 다른 작업을 수행하도록 만드는것이 좋음
+  ```kotlin
+  class ShowUserDataUseCase(
+    val repo: UserDataRepository,
+    val view: UserDataView,
+    val analyticsScope: CoroutineScope //CoroutineScope(SupervisorJob())
+  ) {
+    suspend fun showUserData() = coroutineScope {
+        val name = async { repo.getName() }
+        val friends = async { repo.getFriends() }
+        val profile = asysc { rpo.getProfile() }
+        val user = User(name.await(), frineds.await(), profile.await())
+  
+        view.show(user)
+        analyticsScope.launch { repo.notifyProfileShown() } // launch { repo.notifyProfileShown() } 보다 좋음
+    }
+  }
+  ```
+  - 취소도 가능하며
+  - 중요하지 않은 작업을 대기하지 않아도 됨
