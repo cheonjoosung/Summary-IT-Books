@@ -896,3 +896,91 @@ val seq = {
   ```
   - 취소도 가능하며
   - 중요하지 않은 작업을 대기하지 않아도 됨
+
+
+## 12장 디스패처
+- 개요
+  + 코루틴이 실행되어야 할 스레드를 결정할 수 있는데 이 때 디스패처를 이용함
+  + RxJava 의 스케줄러와 비슷한 개념?
+
+### 기본 디스패처
+- CPU 집약적인 연산을 수행하도록 설계된 Dispatchers.Default
+- CPU 개수와 동일한 수의 스레드 풀을 가짐
+  ```kotlin
+  suspend fun main() = coroutineScope {
+    repeat(1000) {
+        launch {
+            List(1000) { Random.nextLong() }.maxOrNull()
+            val threadName = Thread.currentThread().name
+            println("name $threadName")
+        }
+    }
+  }
+  ```
+  
+### 기본 디스패처를 제한하기
+- limitedParallelism(Int) 사용하면 특정 수 이상의 스레드 사용못하도록 막을 수 있음
+  + 모든 스레드를 다 써버리는 상황을 막기위한 용도
+  + kotlinx.coroutines 1.6 도입
+
+### 메인 디스패처
+- Dispatchers.Main 은 복잡한 연산이 필요하지 않을 때 이용
+  + I/O 또는 네트워크 작업 시에는 추천하지 않음
+
+### IO 디스패처
+- Dispatchers.IO 파일 읽고 쓰는 경우 등 스레드를 블로킹할 때 사용하기 위해 설계
+  + Dispatchers.Default 와 같은 스레드 풀을 공유함
+  + Dispatchers.Default -> withContext(Dispatchers.IO) 로 변환되면 Default 쓰레드 한도가 아닌 IO 쓰레드 한도로 적용
+
+### 커스텀 스레드 풀을 사용하는 IO 디스패처
+- Dispatchers.IO = pool.limitedParallelism(64)
+  + 스레드 블로킹하는 경우가 잦은 클래스에서 자기만의 한도를 가진 커스텀 디스패처 정의
+
+### 정해진 수의 스레드 풀을 가진 디스패처
+- ExecutorService.asCoroutineDispatcher() 로 만들어진 디스패처의 가장 큰 무넺점은 close 함수로 닫아야 함
+
+### 싱글스레드로 제한된 디스패처
+- 다수의 스레드가 변수 공유로 인한 문제
+  ```kotlin
+  var i = 0
+  
+  suspend fun main(): Unit = coroutineScope {
+    repeat(10_000) {
+        launcH(Dispatchers.IO) {
+            i++
+        }
+    }
+    delay(1000)
+    println(i) // ~9930 컴퓨터마다 다를 수 있음
+  }
+  ```
+  + Executors 를 사용하여 싱글스레드 디스패처 만들어야 함
+  ```kotlin
+  val dispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+  ```
+  + limitedParallelism(1) 를 사용도 가능하나 블로 킹되면 순차적으로 처리되는 것이 단점
+
+### 프로젝트 룸의 가상 스레드 사용하기
+- JVM 플랫폼은 프로젝트 Loom 이라는 기존 쓰레드보다 가벼운 가상 스레드 도입 함
+  + JVM 19 이상부터 사용가능하며 안정화전까지 엔터프라이즈 애플리케이션 적용은 미루는 것이 좋음 
+
+### 제한받지 않는 디스패처
+- Dispatchers.Unconfined 스레드를 바꾸지 않는다
+  + 단위 테스트 시 유용
+
+### 메인 디스패처 즉시 옮기기
+- 코루틴 배정도 비용이 듬
+- withContext 호출 시 코루틴 중단되고 큐에서 기다리다가 재개함
+- 메인 스레드를 기다리는 큐가 쌓여있다면 withContext 때문에 사용자 데이터는 약간 지연뒤에 보여질것임
+  + Dispatchers.Main.immediate 호출하면 즉시 실행 됨
+
+### 컨티뉴에이션 인터셉터
+- 디스패칭은 코틀린 언어세ㅓ 지원하는 컨티뉴에이션 인터셉션을 기반으로 작동
+  + ContinuationInterceptor 라는 코루틴 컨텍스트는 코루틴이 중단 시 interceptContinuation 메서드로 컨티뉴에시녀 객체를 수정하고 포함
+
+작업의 종류에 따른 각 디스패처의 성능 비교
+- 중요사항
+  + 단지 중단할 경우에는 사용하고 있는 스레드 수가 얼마나 많은지는 문제가 되지 않음
+  + 블로킹 경우 스레드 많은수록 코루틴 종료시간이 빨라짐
+  + CPU 집약적인 연산에서는 Dispatchers.Default 가 가장 좋은 선택지
+  + 메모리집약적인 연산을 처리하고 있다면 많은 스레드 사용하는 것이 좀 더 낫긴하나 별 차이 없음
