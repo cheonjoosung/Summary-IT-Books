@@ -984,3 +984,100 @@ val seq = {
   + 블로킹 경우 스레드 많은수록 코루틴 종료시간이 빨라짐
   + CPU 집약적인 연산에서는 Dispatchers.Default 가 가장 좋은 선택지
   + 메모리집약적인 연산을 처리하고 있다면 많은 스레드 사용하는 것이 좀 더 낫긴하나 별 차이 없음
+
+
+## 13장 코루틴 스코프 만들기
+- 안드로이드/백엔드 개발 시 많이 사용
+
+### CoroutineScope 팩토리 함수
+- CoroutineScope 는 coroutineContext 를 유일한 프로퍼티로 가지고 있는 인터페이스
+  ```kotlin
+  interface CoroutineScope {
+    val coroutineContext: CoroutineContext
+  }
+  ```
+- CoroutineScope 인터페이스를 구현한 클래스를 만들고 내부에서 코루틴 빌더 직접 호출 가능
+  ```kotlin
+  class SomeClass : CoroutineScope {
+    override val coroutineContext: CoroutineContext = Job()
+  
+    fun onStart() { 
+        launch {
+            //...
+        }
+    }
+  }
+  
+  class SomeClass {
+    val scope: CoroutineScope = ...
+  
+    fun onStart() { 
+        scope.launch {
+            //...
+        }
+    }
+  }
+  ```
+  + 위 방식보다 아래 방식 선호 (위의 경우 전체 스코프 취소시 코루틴 시작 불가능하다)
+- CoroutineScope 팩토리 함수
+  ```kotlin
+  public fun CoroutineScope(context: CoroutineContext) : CoroutineScope =
+    ContextScope(
+        if (context[job] != null) context
+        else context + Job()
+    )
+  ```
+  
+### 안드로이드에서 스코프 만들기
+- onCreate() 를 통해 MainViewModel 이 데이터 가져오는 경우
+  + BaeViewModel 스코프 단 한번으로 정의
+  ```kotlin
+  abstract class BaseViewModel(
+    private val onError: (Throwable) -> Unit
+  ): ViewModel() {
+  
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        onErro(throwable)
+    }
+  
+    private val context = Dispatchers.Main + SupervisorJob() + exceptionHandler
+  
+    //protected val scope = CoroutineScope(Dispatchers.Main + Job())
+    protected val scope = CoroutineScope(context)
+  
+    override fun onCleared() {
+        //scope.cancel() 스코프 전체취소
+        context.cancelChildren() // 자식 취소
+    }
+  }
+  
+  class MainViewModel(
+    private val userRepo: UserRepository,
+    private val newsRepo: NewsRepository
+  ) : BaseViewModel {
+    fun onCreate() {
+        scope.launch {
+            val user = userRepo.getUser()
+            view.showUserData(user)
+        } 
+        scope.launch {
+            val news = newsRepo.getUser()
+            view.showNews(user)
+        } 
+    }
+  }
+  ```
+  + 메인 쓰레드가 많은 수의 함수를 호출하기에 Dispatchers.Main 사용
+  + onDestroy() 시 취소 가능하게 만들기 위해서 Job() 사용 (명시적)
+  + 사용자 데이터 가져올 때 에러가 발생하더라더 뉴스를 봐야하므로 독립적인 SupervisorJob() 사용
+
+### viewModelScope & lifecycleScope
+- lifecycle-viewmodel-ktx 2.2.0 or lifecycle-runtime-ktx 2.2.0 이상 버전 필요
+  + 특정 컨텍스트가 필요없다면 해당 스코프를 쓰는것이 편리하고 좋음
+
+### 백엔드에서 코루틴 만들기
+- Pass
+
+### 추가적인 호출을 위한 스코프 만들기
+- 추가적인 연산을 시작하기 위한 스코를 만드는데 함수나 생성자의 인자를 통해 주로 주입
+  + 예외를 관제 시스템으로 보내고 싶으면 CoroutineExceptionHandler 사용
