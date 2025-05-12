@@ -1081,3 +1081,95 @@ val seq = {
 ### 추가적인 호출을 위한 스코프 만들기
 - 추가적인 연산을 시작하기 위한 스코를 만드는데 함수나 생성자의 인자를 통해 주로 주입
   + 예외를 관제 시스템으로 보내고 싶으면 CoroutineExceptionHandler 사용
+
+
+## 14장 공유 상태로 인한 문제
+- 개요 
+  ```kotlin
+  suspend fun fetchUser(id: Int) {
+    val newUser = api.fetchUser(id)
+    users.add(newUser)
+  }
+  ```
+  + 같은 시간에 두 개 이상의 스레드에서 함수가 호출될 수 있으므로 보호되어야 함
+  + list 추가 되어서 사이즈 100인데 다른 스레드에서 99로 참조시 충돌이 발생할 수도 있음
+
+### 동기화 블로킹
+- Java 에서는 전통젃으로 synchronized 블록이나 동기화된 컬렉션 사용하여 해결함
+  ```kotlin
+  var count = 0
+  
+  fun main() = runBlocking {
+    val lock = Any()
+    massiveRun {
+        sysnchronized(lock) {
+            count++
+        } 
+    }
+    println("Count=$count")
+  }
+  ```
+  + 동기화 블록 내부에서 중단이 불가능 함
+  + 동기화 블록에서 코루틴이 자기 차례를 기다릴 떄 스레드를 블로킹한다는 것
+
+### 원자성
+- 원자성 연산
+  + 락 없이 로우 레벨로 구현되어 효율적이고 사용하기 쉬움
+  + 빠르게 스레드 안전을 보장, AtomicInteger
+  ```kotlin
+  var count = AtomicInteger()
+  
+  fun main() = runBlocking {
+    val lock = Any()
+    massiveRun {
+        count.incrementAndGet()
+    }
+    println("Count=${count.get()}")
+  }
+  ```
+  + 하나의 연산에서 원자성을 가지지 전체 연산에서 원자성을 가지지 않음
+- AtomicReference 래핑
+  ```kotlin
+  class UserDownloader(
+    private val api: NetworkService
+  ) {
+    private val users = AtomicReference(listOf<User>())
+  
+    fun downloaded(): List<User> = users.get() // 원본 유지
+  
+    suspend fun fetchUser(id: Int) {
+        val newUser = api.fetchUser(id)
+        users.getAndUpdate { it + newUser }
+    }
+  }
+  ```
+  + getAndUpdate 원자성 보장 함수를 사용해 충돌 없이 값 갱신
+
+### 싱글스레드로 제한된 디스패처
+- 병렬성을 하나의 스레드로 제한하는 것인데 두 가지 방법으로 가능
+  + 코스 그레인 스레드 한정
+    * 디스패처를 싱글스레드로 제한한 withContext 로 전체함수를 래핑하는 방법
+    * 사용하기 쉬우며 충돌 방지 가능하나 멀티스레딩 이점 누리지 못함 
+  + 파인 그레인드 스레드 한정
+    * 상태를 변경하는 구문들만 래핑
+    * 코스 그레인보다 번거롭지만 크리티컬 섹션이 아닌 부분이 블로킹되거나 GPU 집약적인 경우에 더 나은 성능 제공
+
+### 뮤텍스
+- 단 하나의 열쇠가 있는 방이라 생각
+  + 핵심 기능은 lock
+  + 첫 번째 코루틴이 lock 호출하면 열쇠를 가지고 중단없이 실행
+  + 두 번째 코루틴이 lock 호출하면 첫 번쨰 코루틴 unlock 까지 중단
+  + lock & unlock 직접 사용하는 건 위험함. 에외발생 시 열쇠를 못받기에 deadLock 상태에 빠질 수 있다.
+  + lock 시작해 finally 블록체엇 unlock 을 호출하는 withLock 함수 사용
+  ```kotlin
+  val mutex = Mutex()
+  mutex.withLock {
+  }
+  ```
+  + 위 방식은 스레드 블로킹 대신 코루틴 중단시키기에 조금 더 안전하고 가벼운 방식
+
+### 세마포어
+- 둘 이상이 접근할 수 있는 방법
+  + acquire, release, withPermit 함수 가짐
+  + 공유 상태 해결할 수 없지만 동시 요청을 처리할 수를 제한할 떄 사용할 수 있어 처리율 제한 장치 구현 떄 도움이 됨
+  
