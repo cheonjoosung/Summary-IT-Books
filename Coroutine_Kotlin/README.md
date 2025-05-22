@@ -1284,3 +1284,61 @@ val seq = {
   + 가장 먼저 완료되는 코루틴의 결과값 기다릴 때
   + 여러 개의 채널 중 전송 또는 수신 가능한 채널 사용할 때 유용
   + async 코루틴의 경합 구현할 때
+
+
+## 18장 핫 데이터 소스와 콜드 데이터 소스
+- 개요
+  + 채널만으로는 데이터 처리하기가 힘든 부분이 있었음
+  + 핫 채널 : 컬렉션(List, Set), Channel
+  + 콜드 채널 : sequence, Stream, Flow,RxJava 스트림
+
+### 핫 vs 콜드
+- 핫 데이터 스트림
+  + 데이터 소비와 무관하게 원소 생성
+  + list의 map,filter 중간 연산이 있음
+- 콜드 데이터 스트림
+  + 게으르기에 요청이 있을 때만 작업 수행하며 아무것도 저장하지 않음
+  + 무한할 수 있으며 최소한의 연산만 수행함, 중간에 생성되는 값들 보관할 필요없기에 메모리를 적게 사용
+
+### 핫 채널, 콜드 플로우
+- 플로우 생성하는 일반적인 방법은 produce 함수와 비슷한 형태의 빌더 사용인데 그것이 flow 임
+  ```kotlin
+  val channel = produce {
+    while(true) {
+        val x = computeNextValue()
+        send(x)
+    }
+  }
+  
+  val flow = flow {
+    while(true) {
+        val x = computeNextValue()
+        emit(x)
+    }
+  }
+  ```
+  + 채널 핫이라 곧바로 계산
+- 플로우
+  + 콜드 데이터 소스이기에 값이 필요할 때만 생성
+  + collect 와 같이 최종 연산이 호출될 때 원소가 어떻게 생성되어야 하는지 정의한 것에 불과
+  + flow 빌더는 코루틴스코프가 필요하지 않음
+  ```kotlin
+  private fun makeFlow() = flow {
+    println("Flow started")
+    for (i in 1..3) {
+        delay(1000)
+        emit(i)
+    }
+  }
+  
+  suspend fun main() = coroutineScope {
+    val flow = makeFlow()
+    
+    delay(1000)
+    println("Calling flow...")
+    flow.collect { value -> println(value)}
+    println("Consuming Again...")
+    flow.collect { value -> println(value)}
+  }
+  // (1초후) -> Calling flow... -> (1초후) -> 1 -> (1초후) -> 2 -> (1초후) -> 3 -> Consuming Again... 생량ㄱ
+  ```
