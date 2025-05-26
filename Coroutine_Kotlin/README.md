@@ -1342,3 +1342,77 @@ val seq = {
   }
   // (1초후) -> Calling flow... -> (1초후) -> 1 -> (1초후) -> 2 -> (1초후) -> 3 -> Consuming Again... 생량ㄱ
   ```
+
+
+### 19장 플로우란 무엇인가?
+- 개요
+  + 비동기적으로 계산해야 할 값의 스트림을 나타낸다
+  + Flow 인터페이스 자체는 떠다니는 원소들을 모으는 역할이며 그 끝에 도달할 때까지 각 값을 처리
+  + Flow 의 Collect 와 컬렉션의 forEach 와 비슷
+  ```kotlin
+  interface Flow<out T> {
+    suspend fun collect(collector: FlowCollecotr<T>)
+  }
+  ```
+  
+### 플로우와 값들을 나타내는 다른 방법들과 비교
+- 컬렉션들은 모든 원소의 계산이 완료된 것들의 모음
+  ```kotlin
+  fun getFlow(): Flow<String> = flow {
+    reepat(3) {
+        delay(1000)
+        emit("User$it")
+    }
+  }
+  
+  suspend fun main() {
+    withContect(newSingleThreadContet("main")) {
+        launch {
+            repeat(3) {
+                delay(100)
+                println("Processing on coroutine")
+            } 
+        } 
+        val list = getFlow()
+        list.collect { println(it) }
+    } 
+  }
+  
+  // 0.1 초마다 Processing on coroutine 호출
+  // 1초마다 User 호출
+  ```
+- 플로우는 코루틴을 사용해야 하는 데이터 스트림으로사용 되어야 함
+
+### 플로우 특징
+- 플로우의 최종 연산은 스레드 블로킹 대신 코루틴을 중단시킴
+
+### 플로우 명명법
+- 플로우는 몇 가지 요소로 구성
+  + 어디선가 시작되어야 함
+  + 마지막 연산은 최종 연산이라 불리며 중단 가능하거나 스코프를 필요로 하는 유일한 연산
+  + collect() 가 주로 최종 연산
+  + 중간 연산을 가짐 : onEach, onStart, onCompletion, catch 
+
+### 실제 사용 예
+- 채널보다는 플로우가 필요한 경우가 더 많음
+  + 웹소켓 or RSocket 알림과 같이 서버가 보낸이벤트를 통해 전달된 메시지 받는 경우
+  + 텍스트 입력 또는 클릭과 같은 사용자 액션
+  + 세넛 또는 위치나 지도와 같은 기기의 정보 변경
+  + DB 변경 감지
+  ```kotlin
+  @Dao
+  interface MyDao {
+    @Query("SELECT * FROM somedata_table")
+    fun getData(): Flow<List<SomeData>>
+  }
+  ```
+  + 자주 변경되는 것들 스카이스캐너 처럼
+- 동시처리에 유용
+  ```kotlin
+  suspend fun getOffers(sellers: List<Seller>): List<Offer> = 
+    sellers.asFlow()
+            .flatMapMerge(concurrency = 20) { seller ->
+                suspend { api.requestOffers(seller.id) }.asFlow()
+            }
+            .toList()
+  ```
