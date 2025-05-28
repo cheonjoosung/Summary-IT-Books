@@ -1416,3 +1416,59 @@ val seq = {
             }
             .toList()
   ```
+
+
+## 20장. 플로우의 실제 구현
+- 개요
+  + 어떤 연산을 실행할지 정의한 것으로 중단 가능한 람다식에 몇 가지 요소 추가한 것
+
+### Flow 이해하기
+- 제너릭 타입
+  + ```kotlin
+    fun interface FlowCollecotr<T> {
+        suspend fun emit(value: T)
+    }
+    
+    interface Flow<T> {
+        suspend fun coolect(collecotr: FlowCollector<T>)
+    }
+    
+    fun <T> flow(
+        builder: suspend FlowCollector<T>.() -> Unit
+    ) = object: Flow<T> {
+        override suspend fun collect(collector: FlowCllector<T>) {
+            collector.builder()
+        }
+    }
+    
+    suspend fun main() {
+      val f: Flow<String> = flow {
+        emit("A")
+        emit("B")
+        emit("B")
+      }
+    
+      f.collect { print(it) } // ABC
+      f.collect { print(it) } // ABC
+    }
+    ```
+- Iterator<T>.asFlow(), Sequence<T>.asFlow(), flowOf
+
+### Flow 처리 방식
+- flow, collect ,emit
+  + ```kotlin
+    fun <T, R> Flow<T>.map(
+        transformation:suspend (T) -> R
+    ): Flow<R> = flow {
+          collect {
+            emit(transformation(it))  
+          }
+    }
+    ```
+
+### 동기로 작동하는 Flow
+- 플로우 또한 중단 함수처럼 동기로 작동하기에 플로우 완료될 떄까지 collect 호출 중단 됨
+
+### 플로우와 공유 상태
+- 플로우 처리를 통해 좀 더 복잡한 알고리즘 구현할 떄 언제 변수에 대한 접근을 도익화해야 하는지 알아야 함
+- 외부 변수는 같은 플로우가 모으는 모든 코루틴이 공유하게 됩니다. 이런 경우 동기화가 필수이며 플로우 컬렉션이 아니라 플로우에 종속되게 됩니다
