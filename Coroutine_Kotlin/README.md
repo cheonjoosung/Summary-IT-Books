@@ -1472,3 +1472,59 @@ val seq = {
 ### 플로우와 공유 상태
 - 플로우 처리를 통해 좀 더 복잡한 알고리즘 구현할 떄 언제 변수에 대한 접근을 도익화해야 하는지 알아야 함
 - 외부 변수는 같은 플로우가 모으는 모든 코루틴이 공유하게 됩니다. 이런 경우 동기화가 필수이며 플로우 컬렉션이 아니라 플로우에 종속되게 됩니다
+
+
+## 21장. 플로우 만들기
+- 플로우는 어디선가 시작되어야 하는데 다양한 방법이 있음
+
+### 원시값을 가지는 플로우
+- flowOf 로 설정할 수 있고 빈값일 경우 emptyFlow() 함수 사용
+
+### 컨버터
+- asFlow 함수를 이용
+  + Iterable, Iterator, Sequence 를 flow 로 변환 가능
+  + 즉시 사용 가능한 원소들의 플로우 만듬
+
+### 함수를 플로우로 바꾸기
+- 시간상 지연되는 하나의 값을 나타낼 때 자주 사용하기에 중단 함수를 플로우 변환하는 것 가능
+- function().asFlow()
+- 일반 함수를 변경하려면 함수 참조값 필요 코틀린의 경우 :: 사용
+
+### 플로우와 리액티브 스트림
+- 리액티브 스트림 활용 시 플로우 적용이 쉬움
+  + Flux, Flowable, Observable 은 kotlinx-coroutines-reactive 라이브러리의 asFlow 함수를 사용해 Flow로 변환 가능
+  + 역으로 변환 시 복잡한 라이브러리 사용해야 함
+
+### 플로우 빌더
+- flow 빌더
+  + 빌더는 flow 함수 호출 -> 람다식 내부에서 emit 함수를 사용해 다음 값 방출
+  + Channel 이나 Flow 에서 모든 값 방출하려면 emitAll 사용
+
+### 플로우 빌더 이해하기
+- collect 메서드 내부에서 block 함수를 호출하는 Flow 인터페이스를 구현
+- flow 빌더를 호출하면 단지 객체를 만들 뿐
+- collect 호출 시 collector 인터페이스의 block 함수를 호출
+- ```kotlin
+  public fun <T> flow(block: suspend FlowCollector<T>.() -> Unit): Flow<T> = FlowImpl(block)
+
+  private class FlowImpl<T>(
+    private val block: suspend FlowCollector<T>.() -> Unit
+  ) : Flow<T> {
+    override suspend fun collect(collector: FlowCollector<T>) {
+       // block을 collector와 함께 실행함 (emit 가능)
+       block.invoke(collector)
+    }
+  }
+  ```
+  + flow {} 안에서 우리가 emit(value)를 호출할 수 있는 이유는 FlowCollector<T>.() -> Unit 형태로 **수신 객체(emit 가능)**로 넘겨받기 때문입니다.
+  + 내부에서 FlowImpl이라는 Flow 구현체를 생성하고, collect()가 호출되면 우리가 작성한 블록이 실행됩니다.
+  + 이 블록은 suspend 함수이기 때문에 emit() 안에서 다른 suspend 함수도 호출 가능합니다.
+
+### 채널플로우(channelFlow)
+- Flow 는 콜드 스트림으로 필요할 때만 값을 생성
+- 페이지가 여러개일 경우 첫페이지만 로드하고 다음 페이지는 요청이 들어올때 지연 요청
+
+### 콜백플로우(callbackFlow)
+- 사용자의 클릭 또느 활동 변화 감지하는 이벤트 플로우 필요
+- 콜백플로우가 콜백 함수를 래핑하는 방식으로 변경 됨
+- awaitClose, trySendBlocking(), close, cancel
