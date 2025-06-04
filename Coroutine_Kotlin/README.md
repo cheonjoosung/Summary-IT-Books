@@ -1566,3 +1566,58 @@ val seq = {
 ### launchIm
 - collect 는 플로우 완료될 때까지 코루틴 중단하는 중단 연산
 - launch 빌더로 collect 래핑하면 플로우를 다른 코루틴에서 처리할 수 있음
+
+
+## 23장. 플로우 처리
+- 개요
+  + 플로우는 값이 흐르기에 제외하고 곱하고 변형하거나 합치는 등 방법으로 변경도 가능
+
+### map
+- 각 원소를 변환 함수에 따라 변환함
+- {it * it } 인 경우 1 2 3 -> 1 4 9
+
+### filter
+- 주어진 조건에 맞는 값들만 가진 플로우로 변환
+
+### take  & drop
+- take 특정 수의 원소만 통과 시킴
+- drop 특정 수의 원소를 무시함
+
+### 컬렉션 처리는 어떻게 동작할까?
+- Flow<T>.map {} 은 내부적으로 원소를 emit 하고 있음
+
+### merge, zip, combine
+- merge 두 개의 플로우를 하나의 플로우로 합치는 것 (단순 합치기)
+- zip 두 개의 플로우로 하나의 쌍 플로우를 만드는 것
+  + 첫 번쨰 플로우가 닫히면 함수 또한 끝남
+- combine 제한없이 두 플로우 모두 닫힐때까지 원소를 내보냄
+  + 두 플로우가 모두 닫힐때까지 원소를 내보냄
+  + 하나가 새 값을 emit 할 때마다 다른 flow 의 가장 최신 값과 조합
+  + 반응형 UI 나 상태 결합에 적합?
+
+### fold, scan
+- fold
+  + 초기값부터 시작하여 주어진 원소 각각에 대해 두 개의 값을 하나로 합치는 연산
+  + 최종값만 나옴
+- scan
+  + 누적되는 과정의 모든 값을 생성하는 중간 연산
+
+### flatMapConcat, flatMapMerge, flatMapLatest
+- flatMapConcat
+  + faltMap 은 map 과 비슷하나 평탄화 컬렉션 반환해야 한다는 점이 다름
+  + 생성된 플로우를 하나씩 처리 (두 번쨰는 첫 번째 완료 후 시작)
+  + 1 2 3 + a b c -> 1a 2a 3a 1b 2b 3b 1c 2c 3c
+- flatMapMerge
+  + 만들어진 플로우를 동시 처리
+  + 1 2 3 + a b c -> 1a 1b 1c 2a 2b 2c 3a 3b 3c
+- flatMapLatest
+  + 새로운 값이 나올 때마다 이전 플로우 처리는 사라져 버림
+
+### 재시도(retry)
+- 이전 단계에서 예외가 발생 시 조건자를 확인하여 결정
+
+### 중복 제거 함수
+- distinctUntilChnaged 함수
+
+### 최종 연산
+- collect 이외에 count, fist, firstOrNull, fold, reduce
