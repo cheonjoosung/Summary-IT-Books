@@ -1621,3 +1621,35 @@ val seq = {
 
 ### 최종 연산
 - collect 이외에 count, fist, firstOrNull, fold, reduce
+
+
+---
+
+## 24장. 공유플로우와 상태플로우
+- 개요
+  + 플로우는 콜드 데이터기에 하나의 데이터 변경 감지가 힘들다
+  + 이 때 공유 플로우 또는 상태 플로우 사용
+
+### 공유 플로우
+- MutableSharedFlow
+  + 공유 플로우를 통해 메시지 보내면 대기하고 있는 모든 코루틴 수신
+  + reply 통해 마지막 전송한 값들이 정해진 수만큼 저장 가능
+  + resetReplayCache 사용하여 저장한 캐시 초기화 가능
+- SharedFlow
+  + Flow 상속하고감지하는 목적
+- FlowCollector
+  + 값을 내보내는 목적
+- shareIn
+  + Flow -> SharedFlow 바꾸는 가장 쉬운 방법
+  + SharingStarted.Eagerly 즉시 값 감지하기 시작하고 플로우로 값을 전송
+  + SharingStarted.Lazily 첫 번째 구독자가 낭로 때 감지하기 시작
+  + WhileSubscribed 첫 번째 구독자가 나올 때 감지하기 시작 ㅈ마지막 구독자가 사라지면 플로우도 멈춤
+  + SharingStarted 인터페이스를 구현하여 커스텀화된 전략을 정의하는 것도 가능
+- 다양한 서비스가 위치에 의존하고 있다면 각 서비스가 데이터베이스를 독자적으로 감지하는 건 최적화 된 방법이 아님
+
+### 상태 플로우
+- 공유 플로우의 개념 확장으로 replay 인자값이 1인 공유플로우와 비슷
+- value 프로퍼티로 접근 가능한 값을 항상 가지고 있음
+- 라이브데이터를 대체하는 최신 방식으로 사용 중으로 초기값을 가지고 있기에 null 일 필요 없음
+- stateIn
+  + Flow<T> -> StateFlow<T> 변환하는 함수
