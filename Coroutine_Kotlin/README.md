@@ -1653,3 +1653,70 @@ val seq = {
 - 라이브데이터를 대체하는 최신 방식으로 사용 중으로 초기값을 가지고 있기에 null 일 필요 없음
 - stateIn
   + Flow<T> -> StateFlow<T> 변환하는 함수
+
+
+---
+
+
+## 25장. 플로우 테스트하기
+
+### 끝나지 않는 플로우 테스트하기
+- runTest 인 경우 스코프는 this 가 아니라 backgroundScope
+
+### 개방할 연결 개수 정하기
+
+### 뷰 모델 테스트하기 
+
+
+--- 
+
+
+## 26장. 일반적인 사용 예제
+- 개요
+  + 데이터/어댑터, 도메인, 표현/API/UI 코루틴 사용함
+
+### 데이터/어댑터 계층
+- Retrofit
+  + suspend 제어자를 추가하여 중단함수로 만들기
+  
+- DB
+  + Room 에서도 suspend 제어자를 추가하여 중단함수로 만들 수 있음
+  + 테이블 상태 감지하긴 위한 Flow 도 지원
+  
+- 콜백함수
+  + 코루틴 지원하지 않는 라이브러리의 경우 suspendCancellableCoroutine 사용해 콜백함수를 중단함수로 변경
+  
+- 블로킹 함수
+  + 스레드 제한이 있기에 새로운 디스패처를 만드는 방안도 고려해봐야 함
+  + CPU 집약연산 Dispatchers.Default, UI Dispatchers.Main.immediate, withContext 로 디스패처 설정 가능
+  
+- 플로우로 감지하기
+  + 여러 가지 값을 받아와서 처리하는 경우 flow 사용
+  + 사용 라이브러리에서 값을 반환 없다면 callbackFlow(or channelFlow) 사용하고 끝날 때 awaitClose 반드시 써야 함
+
+### 도메인 계층
+- 도메인 계층은 비즈니스 로직 구현하며 서비스 및 퍼샤드 객체를 정의
+
+- 동시호출
+  + 두 개의 프로세스 병렬 실행 시 async 빌더 사용해 비동기로 실행
+  + await() 을 통해 값을 대기
+
+- 플로우 변환
+  + map, filter, onEach, scan, flatMapMerge
+  + merge zip, comnine 을 통해 flow 를 합침
+  + 하나의 플로우를 여러 개의 코루틴이 감지하길 원한다면 SharedFlow 로 변환
+
+### 표현/API/UI 계층
+- Android 경우 lifecycle-viemodel-ktx 가 있기에 viewModelScope or lifecycleSocpe 사용
+
+- 커스텀 스코프 만들기
+  + CoroutineScope 함수를 사용해 커스텀 코루틴 스코프 정의
+
+- runBlocking 사용하기
+  + 2가지 목적
+    * main 함수 포장
+    * 테스트 함수 포장
+
+- 플로우 활용하기
+  + onEach, launchIn, onStart, onCompletion, catch 사용
+  + 
